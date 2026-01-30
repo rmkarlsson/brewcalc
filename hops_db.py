@@ -7,6 +7,9 @@ HOPS_DB = {
     },
     "Saaz": {
         "alpha_acid": 0.035,
+    },
+    "Magnum": {
+        "alpha_acid": 0.10,
     }
 }
 

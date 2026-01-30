@@ -1,0 +1,72 @@
+import math
+from typing import Dict, List
+import logging
+from hops_db import get_hop
+from system_profile import PhysicalConstants
+
+# Module logger
+logger = logging.getLogger(__name__)
+
+
+class BitternessCalculator:
+
+    def __init__(self):
+        pass
+
+    def calc_hops_additions(self, plato: float, volume: float, target_ibu: float, hops: List[Dict]) -> List[Dict]:
+        # Calculate hop additions based on malt percentages and volume
+
+        hops_additions = []
+        for hop in hops:
+            # Hämta humleinfo från hops_db
+            try:
+                hop_info = get_hop(hop['name'])
+            except ValueError:
+                logger.error("Humlesort saknas i databasen: %s", hop['name'])
+                raise
+
+            alpha_acid = hop_info.get('alpha_acid')
+            if alpha_acid is None:
+                logger.error("'alpha_acid' saknas för humlesort: %s", hop['name'])
+                raise ValueError(f"'alpha_acid' saknas för humlesort: {hop['name']}")
+
+            boil_time = hop.get('boil_time_min')
+            if boil_time is None:
+                logger.error("'boil_time_min' saknas för humlesort i receptet: %s", hop['name'])
+                raise ValueError(f"'boil_time_min' saknas för humlesort i receptet: {hop['name']}")
+
+            logger.debug("Hop IBU contribution in percent: %s, target_ibu %s, alpha_acid %s, boil time %s", hop['percent'],  target_ibu, alpha_acid, boil_time)
+            grams = self.hop_weight_grams((hop['percent']/100) * target_ibu, volume, plato, boil_time, alpha_acid)
+
+            logger.debug(
+                "Hop calc: name=%s percent=%s boil_time_min=%s alpha_acid=%.3f grams=%.2f",
+                hop['name'], hop.get('percent'), boil_time, alpha_acid, grams,
+            )
+
+            hops_additions.append({
+                'hop': hop['name'],
+                'weight': grams,
+                'boil_time_min': hop['boil_time_min']
+            })
+        return hops_additions
+
+    def plato_to_og(self, plato: float) -> float:
+        og = 1 + (plato / (258.6 - ((plato / 258.2) * 227.1)))
+        logger.debug("Converted plato %.2f to og %.3f", plato, og)
+        return og
+
+    def tinseth_utilization(self, plato: float, boil_time_min: float) -> float:
+        og = self.plato_to_og(plato)
+        f_og = 1.65 * math.pow(0.000125, (og - 1.0))
+        f_t = (1 - math.exp(-0.04 * boil_time_min)) / 4.15
+        logger.debug("tinseth utilization: plato %.2f, og %.3f, boil_time_min=%.1f, utilization=%.3f", plato, og, boil_time_min, f_og * f_t)
+        return f_og * f_t
+
+    def hop_weight_grams(self, target_ibu: float, volume_l: float,
+                     plato: float, boil_time_min: float,
+                     alpha_acid: float) -> float:
+        U = self.tinseth_utilization(plato, boil_time_min)
+        ibu = (target_ibu * volume_l) / (1000 * alpha_acid * U)
+        logger.debug("Calculated hop weight grams: target_ibu=%.1f, volume_l=%.1f, plato=%.1f, boil_time_min=%.1f, alpha_acid=%.3f => grams=%.2f",
+                     target_ibu, volume_l, plato, boil_time_min, alpha_acid, ibu)
+        return ibu

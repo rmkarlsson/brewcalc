@@ -1,8 +1,8 @@
 name: Testbatch Pale Ale
 batch_size_l: 10.0
-boil_time_min: 90
-target_og_plato: 16.0
-target_ibu: 35
+boil_time_min: 60
+target_og_plato: 12.0
+target_ibu: 20.0
 
 mash_fermentables:
   - name: Pale Ale Malt
@@ -20,11 +20,9 @@ fermentor_fermentables:
 
 boil_hops:
   - name: Magnum
-    percent: 70
+    percent: 100
     boil_time_min: 60
-  - name: Cascade
-    percent: 30
-    boil_time_min: 10
+
 
 dry_hops:
   - name: Citra
