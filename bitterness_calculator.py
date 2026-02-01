@@ -1,8 +1,10 @@
 import math
 from typing import Dict, List
 import logging
+import copy
 from hops_db import get_hop
 from system_profile import PhysicalConstants
+from gravity_calculator import GravityCalculator
 
 # Module logger
 logger = logging.getLogger(__name__)
@@ -42,21 +44,21 @@ class BitternessCalculator:
                 "Hop calc: name=%s percent=%s boil_time_min=%s alpha_acid=%.3f grams=%.2f",
                 hop['name'], hop.get('percent'), boil_time, alpha_acid, grams,
             )
+            
+            # Use hops_db as base and add weight from calulation and and boil time from receipe
+            hops_addition = copy.deepcopy(hop_info)
+            hops_addition['name'] = hop['name'] 
+            hops_addition['weight'] = grams
+            hops_addition['boil_time_min'] = hop['boil_time_min']
 
-            hops_additions.append({
-                'hop': hop['name'],
-                'weight': grams,
-                'boil_time_min': hop['boil_time_min']
-            })
+            hops_additions.append(hops_addition)
+
         return hops_additions
 
-    def plato_to_og(self, plato: float) -> float:
-        og = 1 + (plato / (258.6 - ((plato / 258.2) * 227.1)))
-        logger.debug("Converted plato %.2f to og %.3f", plato, og)
-        return og
+
 
     def tinseth_utilization(self, plato: float, boil_time_min: float) -> float:
-        og = self.plato_to_og(plato)
+        og = GravityCalculator.plato_to_og(plato)
         f_og = 1.65 * math.pow(0.000125, (og - 1.0))
         f_t = (1 - math.exp(-0.04 * boil_time_min)) / 4.15
         logger.debug("tinseth utilization: plato %.2f, og %.3f, boil_time_min=%.1f, utilization=%.3f", plato, og, boil_time_min, f_og * f_t)

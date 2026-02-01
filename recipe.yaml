@@ -8,8 +8,9 @@ mash_fermentables:
   - name: Pale Ale Malt
     percent: 70
   - name: Carapils
-    percent: 30
-
+    percent: 23
+  - name: Carafa2
+    percent: 7
 fermentor_fermentables:
   - name: Socker
     percent: 0
@@ -20,9 +21,14 @@ fermentor_fermentables:
 
 boil_hops:
   - name: Magnum
-    percent: 100
-    boil_time_min: 60
-
+    percent: 80
+    boil_time_min: 75
+  - name: Cascade
+    percent: 15
+    boil_time_min: 20
+  - name: Cascade
+    percent: 5
+    boil_time_min: 5
 
 dry_hops:
   - name: Citra

@@ -1,16 +1,41 @@
 import os
 import logging
 import argparse
+import sys
+
+try:
+    from tabulate import tabulate
+    HAVE_TABULATE = True
+except Exception:
+    HAVE_TABULATE = False
 
 from bitterness_calculator import BitternessCalculator
 from gravity_calculator import GravityCalculator
 from system_profile import Braumeister20Short, PhysicalConstants
 from recipe_loader import RecipeLoader
+from color_calculator import ColorCalculator
+
+
+def print_hops_table(hops_additions):
+    """Print a simple text table of hop additions. Uses tabulate if available."""
+    if HAVE_TABULATE:
+        rows = []
+        for h in hops_additions:
+            rows.append([
+                h['name'],
+                f"{h['weight']:.1f}",
+                f"{h['boil_time_min']}",
+                f"{h ['alpha_acid']:.3f}",
+            ])
+        print(tabulate(rows, headers=["Hop","Weight (g)","Boil time (min)","Alpha acid"], tablefmt="github"))
+    else:
+        for h in hops_additions:
+            print(f"  {h['name']}: {h['weight']:.1f} g (boil_time={h.get('boil_time_min','')} min, alpha_acid={h.get('alpha_acid',0):.3f})")
 
 
 if __name__ == "__main__":
     # CLI and global logging config
-    parser = argparse.ArgumentParser(description="Brecac kalkylator")
+    parser = argparse.ArgumentParser(description="Brecac kalkylator", add_help=False)
     parser.add_argument(
         "-d",
         "--debug_level",
@@ -19,15 +44,23 @@ if __name__ == "__main__":
         type=str.upper,
         default=None,
     )
+
+    # Custom help (we disabled default -h) and hop boil calc
+    parser.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS, help="Visa hjälp")
+    parser.add_argument("--hop_boil_calc", "-b", action="store_true", help="Aktivera humlekalkyl (kräver --plato/-p och --volume/-v)")
+    parser.add_argument("--plato", "-p", type=float, help="Plato (°P) att använda vid humlekalkyl")
+    parser.add_argument("--volume", "-v", type=float, help="Volym i liter (L) att använda vid humlekalkyl")
+
     args = parser.parse_args()
 
     # Determine log level: CLI arg overrides env var
     log_level = args.debug_level
+    effective_level = log_level or "INFO"
     logging.basicConfig(
-        level=getattr(logging, log_level, logging.INFO),
+        level=getattr(logging, effective_level, logging.INFO),
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
-    logging.getLogger(__name__).info("Starting brecalc (log_level=%s)", log_level)
+    logging.getLogger(__name__).info("Starting brecalc (log_level=%s)", effective_level)
     # module logger for later debug output
     logger = logging.getLogger(__name__)
 
@@ -81,13 +114,42 @@ if __name__ == "__main__":
     logger.info(f"Number of mashes required: {get_num_mashes}")
 
 
-    bitterness_calc = BitternessCalculator()
-    hops_additions = bitterness_calc.calc_hops_additions(
-        plato=recipe.data["target_og_plato"],
-        volume=total_batch_size_l,
-        target_ibu=recipe.data["target_ibu"],
-        hops=recipe.data["boil_hops"])
+    color = ColorCalculator.calculate(
+        malts=grain_bill,          # grain_bill innehåller amount_kg och color_ebc
+        volume_l=recipe.batch_size_l
+    )
 
-    logger.info("=== Hops Additions ===")
-    for hop in hops_additions:
-        logger.info(f"  {hop['hop']}: {hop['weight']:.1f} g")
+    print("MCU:", color["mcu"])
+    print("EBC (Morey):", color["ebc"])
+
+
+    # Om hop_boil_calc anges, kör kalkyl och avsluta
+    if args.hop_boil_calc:
+        # Validera att båda obligatoriska argumenten finns
+        if args.plato is None or args.volume is None:
+            parser.error("När --hop_boil_calc/-h anges måste --plato/-p och --volume/-v anges")
+        plato_arg = args.plato
+        volume_arg = args.volume
+        logger.info("Running hop boil calc: plato=%s, volume=%s L", plato_arg, volume_arg)
+        bitterness_calc = BitternessCalculator()
+        hops_additions = bitterness_calc.calc_hops_additions(
+            plato=plato_arg,
+            volume=volume_arg,
+            target_ibu=recipe.data.get("target_ibu", 0),
+            hops=recipe.data.get("boil_hops", []),
+        )
+        print("=== Hops Additions ===")
+        print_hops_table(hops_additions)
+        sys.exit(0)
+    else:
+        # Kör normal kalkyl
+        logger.info("Running full brewcalc")
+        bitterness_calc = BitternessCalculator()
+        hops_additions = bitterness_calc.calc_hops_additions(
+            plato=recipe.data["target_og_plato"],
+            volume=total_batch_size_l,
+            target_ibu=recipe.data["target_ibu"],
+            hops=recipe.data["boil_hops"],
+        )
+        print("=== Hops Additions ===")
+        print_hops_table(hops_additions)

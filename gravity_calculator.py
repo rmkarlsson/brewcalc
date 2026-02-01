@@ -18,6 +18,12 @@ class GravityCalculator:
     def __init__(self, sys: Braumeister20Short):
         self.sys = sys
 
+    @staticmethod
+    def plato_to_og(plato: float) -> float:
+        og = 1 + (plato / (258.6 - ((plato / 258.2) * 227.1)))
+        logger.debug("Converted plato %.2f to og %.3f", plato, og)
+        return og
+
     def get_volume_loss_from_grain(self, total_grain_kg: float) -> float:
         """
         Returnerar volymförlust (L) baserat på maltmängd (kg)
@@ -68,10 +74,15 @@ class GravityCalculator:
             # kg malt som krävs
             grain_kg_i = extract_i / (extract_percent * self.sys.mash_efficiency)
 
-            result.append({
-                "name": m["name"],
-                "amount_kg": grain_kg_i
-            })
+            m_with_grain_weight = malt_info
+            # Add amount_kg to dict
+            m_with_grain_weight["amount_kg"] = grain_kg_i
+            m_with_grain_weight["name"] = m["name"]
+
+            logger.debug("Adding malt: %s", m_with_grain_weight)
+            logger.debug("Adding og-malt: %s", malt_info)
+
+            result.append(m_with_grain_weight)
 
             total_grain_kg += grain_kg_i
 

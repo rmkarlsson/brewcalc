@@ -14,6 +14,10 @@ MALTS_DB = {
     "Munich Malt": {
         "extract_percent": 0.78,
         "color_ebc": 15
+    },
+    "Carafa2": {
+        "extract_percent": 0.72,
+        "color_ebc": 1000
     }
 }
 
