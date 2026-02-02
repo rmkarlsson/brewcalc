@@ -1,19 +1,19 @@
 name: Testbatch Pale Ale
 batch_size_l: 10.0
 boil_time_min: 60
-target_og_plato: 12.0
-target_ibu: 20.0
+target_og_plato: 16.5
+target_ibu: 45.0
 
 mash_fermentables:
-  - name: Pale Ale Malt
-    percent: 70
-  - name: Carapils
-    percent: 23
-  - name: Carafa2
-    percent: 7
+  - name: Best a-xl
+    percent: 85
+  - name: Caramunich 3
+    percent: 5
+  - name: Carafa special 2
+    percent: 5
 fermentor_fermentables:
   - name: Socker
-    percent: 0
+    percent: 5
     extract_percent: 1.00
   - name: Honung
     percent: 0
@@ -21,13 +21,10 @@ fermentor_fermentables:
 
 boil_hops:
   - name: Magnum
-    percent: 80
-    boil_time_min: 75
+    percent: 100
+    boil_time_min: 60
   - name: Cascade
-    percent: 15
-    boil_time_min: 20
-  - name: Cascade
-    percent: 5
+    percent: 0
     boil_time_min: 5
 
 dry_hops:

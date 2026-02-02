@@ -3,9 +3,14 @@ MALTS_DB = {
         "extract_percent": 0.80,
         "color_ebc": 6
     },
-    "Pilsner Malt": {
-        "extract_percent": 0.81,
+    "Best a-xl": {
+        "extract_percent": 0.80,
         "color_ebc": 3
+    },
+    
+    "Caramunich 3": {
+        "extract_percent": 0.73,
+        "color_ebc": 150
     },
     "Carapils": {
         "extract_percent": 0.72,
@@ -15,9 +20,9 @@ MALTS_DB = {
         "extract_percent": 0.78,
         "color_ebc": 15
     },
-    "Carafa2": {
+    "Carafa special 2": {
         "extract_percent": 0.72,
-        "color_ebc": 1000
+        "color_ebc": 1150
     }
 }
 
