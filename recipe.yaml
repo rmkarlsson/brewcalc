@@ -1,4 +1,5 @@
-name: Testbatch Pale Ale
+name: Black IPA
+version: 1.0
 batch_size_l: 10.0
 boil_time_min: 60
 target_og_plato: 16.5

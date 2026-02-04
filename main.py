@@ -52,6 +52,7 @@ if __name__ == "__main__":
     parser.add_argument("--plato", "-p", type=float, help="Plato (°P) att använda vid humlekalkyl")
     parser.add_argument("--volume", "-v", type=float, help="Volym i liter (L) att använda vid humlekalkyl")
     parser.add_argument("--system", "-s", choices=["Braumeister20", "Braumeister20Short"], default="Braumeister20Short", help="Systemprofil att använda (Braumeister20 eller Braumeister20Short)")
+    parser.add_argument("--recipe", "-r", required=True, help="Sökväg till receptfil (YAML) som ska användas")
 
     args = parser.parse_args()
 
@@ -67,7 +68,10 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
 
     # 1. Läs recept
-    recipe = RecipeLoader("recipe.yaml")
+    # Verifiera att receptfilen finns innan vi försöker ladda den
+    if not os.path.exists(args.recipe):
+        parser.error(f"Receptfil hittades inte: {args.recipe}")
+    recipe = RecipeLoader(args.recipe)
 
     # 2. Initiera system och kalkylatorer
     system = getattr(sp, args.system)()
@@ -77,36 +81,28 @@ if __name__ == "__main__":
     total_postboil_volume_l = recipe.data["batch_size_l"] + system.trub_loss_l
 
     total_preboil_volume_l = total_postboil_volume_l + boil_off_volume_l
-
+    logger.info(f"Volume preboil initially: {total_preboil_volume_l:.2f} L")
     preboil_gravity_plato = (total_postboil_volume_l/total_preboil_volume_l) * recipe.data["target_og_plato"]
     logger.info(f"Estimated pre-boil gravity: {preboil_gravity_plato:.2f} °P")
 
 
     gravity_calc = GravityCalculator(system)
-    grain_bill = gravity_calc.calc_grain_bill(
+    grain_bill = gravity_calc.calc_grain_bill_no_sparge(
         target_plato=preboil_gravity_plato,
         batch_size_l=total_preboil_volume_l,
         malts_percent=recipe.data["mash_fermentables"],
     )
     total_grain_kg = gravity_calc.calc_total_grain_kg(grain_bill)
 
-    gravity_calc.get_volume_loss_from_grain(total_grain_kg)
-    spent_gain_volume_loss = gravity_calc.get_volume_loss_from_grain(total_grain_kg)
-    logger.info(f"Volume loss from grain: {spent_gain_volume_loss:.2f} L")
+    volume_mash_loss_l = gravity_calc.get_volume_loss_from_grain(total_grain_kg)
+    logger.info(f"Volume loss from grain: {volume_mash_loss_l:.2f} L")
+    total_preboil_volume_l = total_preboil_volume_l + volume_mash_loss_l
 
-    total_preboil_volume_l = total_preboil_volume_l + spent_gain_volume_loss
-    grain_bill = gravity_calc.calc_grain_bill(
-        target_plato=preboil_gravity_plato,
-        batch_size_l=total_preboil_volume_l,
-        malts_percent=recipe.data["mash_fermentables"],
-    )
-    total_grain_kg = gravity_calc.calc_total_grain_kg(grain_bill)
-
-    logger.info(f"Mash-in volume needed: {total_preboil_volume_l:.2f} L")
+    logger.info(f"Volume preboil, final: {total_preboil_volume_l:.2f} L")
 
     # Log results
     logger = logging.getLogger(__name__)
-    logger.info("=== Final grain Bill ===")
+    logger.info("=== Final mash grain bill ===")
     logger.info(f"Mash-in volume needed: {total_preboil_volume_l:.1f} L, {system.get_volume_in_mm(total_preboil_volume_l):.1f} mm from bottom")
     logger.info("Malts:")
     for item in grain_bill:
@@ -128,6 +124,22 @@ if __name__ == "__main__":
     print("EBC (Morey):", color["ebc"])
 
 
+    logger.debug("Calulating fermetor fermentables:")
+    grain_bill_fermentor = gravity_calc.calc_grain_bill(
+        target_plato=recipe.data["target_og_plato"],
+        batch_size_l=recipe.data["batch_size_l"],
+        malts_percent=recipe.data["fermentor_fermentables"],
+    )
+
+    # Skriv ut fermentor-ingredienser och total vikt
+    logger.info("Fermentor fermentables:")
+    total_fermentor_kg = gravity_calc.calc_total_grain_kg(grain_bill_fermentor)
+    for item in grain_bill_fermentor:
+        logger.info(f"  {item['name']}: {item['amount_kg']:.2f} kg")
+    logger.info(f"Total fermentor grain: {total_fermentor_kg:.2f} kg")
+
+
+
     # Om hop_boil_calc anges, kör kalkyl och avsluta
     if args.hop_boil_calc:
         # Validera att båda obligatoriska argumenten finns
@@ -147,8 +159,6 @@ if __name__ == "__main__":
         print_hops_table(hops_additions)
         sys.exit(0)
     else:
-        # Kör normal kalkyl
-        logger.info("Running full brewcalc")
         bitterness_calc = BitternessCalculator()
         hops_additions = bitterness_calc.calc_hops_additions(
             plato=(preboil_gravity_plato + recipe.data["target_og_plato"]) / 2,

@@ -23,6 +23,10 @@ MALTS_DB = {
     "Carafa special 2": {
         "extract_percent": 0.72,
         "color_ebc": 1150
+    },
+    "Socker": {
+        "extract_percent": 1.0,
+        "color_ebc": 0
     }
 }
 
