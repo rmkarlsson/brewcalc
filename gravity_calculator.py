@@ -36,53 +36,13 @@ class GravityCalculator:
         return sum(m["amount_kg"] for m in grain_bill) 
 
 
-    # V = batch_size_l
-    # P = target_plato
-    # E = extract in malt
-    # n = mash efficiency
-    def calc_grain_bill_no_sparge(
-        self,
-        target_plato: float,
-        batch_size_l: float,
-        malts_percent: List[Dict]
-    ) -> List[Dict]:
-        """
-        Returnerar en lista med:
-        - name
-        - percent
-        - extract_percent
-        - amount_kg
-        """
-
-        
-
-        logger.debug(
-            "calc_grain_bill: target_plato=%.1f, batch_size_l=%.1f, malts_count=%d",
-            target_plato,
-            batch_size_l,
-            len(malts_percent),
-        )
-
-
-        result = []
-        for m in malts_percent:
+    def get_pre_boil_plato(self, malts: List[Dict], og_plato: float):
+        percent = 0
+        for m in malts:
             malt_info = get_malt(m["name"])
-            percent_fermentable = m["percent"] / 100.0
-            extract_percent = malt_info["extract_percent"]
+            percent = percent + (m["percent"] / 100.0)
+        return percent * og_plato
 
-            grain_kg_i = (0.01 * batch_size_l * (target_plato * percent_fermentable)) / (extract_percent * self.sys.mash_efficiency)
-
-            m_with_grain_weight = copy.deepcopy(malt_info)
-            # Add amount_kg to dict
-            m_with_grain_weight["amount_kg"] = grain_kg_i
-            m_with_grain_weight["name"] = m["name"]
-            m_with_grain_weight["percent"] = percent_fermentable
-
-            logger.debug("Adding malt: %s", m_with_grain_weight)
-
-            result.append(m_with_grain_weight)
-
-        return result
 
     def calc_grain_bill(
         self,
@@ -124,7 +84,7 @@ class GravityCalculator:
             # kg malt som krävs
             grain_kg_i = extract_i / (extract_percent * self.sys.mash_efficiency)
 
-            m_with_grain_weight = malt_info
+            m_with_grain_weight = copy.deepcopy(malt_info)
             # Add amount_kg to dict
             m_with_grain_weight["amount_kg"] = grain_kg_i
             m_with_grain_weight["name"] = m["name"]

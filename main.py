@@ -3,6 +3,9 @@ import logging
 import argparse
 import sys
 
+from gravities import Gravities
+from volumes import Volumes
+
 try:
     from tabulate import tabulate
     HAVE_TABULATE = True
@@ -17,21 +20,73 @@ from recipe_loader import RecipeLoader
 from color_calculator import ColorCalculator
 
 
-def print_hops_table(hops_additions):
-    """Print a simple text table of hop additions. Uses tabulate if available."""
-    if HAVE_TABULATE:
-        rows = []
-        for h in hops_additions:
-            rows.append([
-                h['name'],
-                f"{h['weight']:.1f}",
-                f"{h['boil_time_min']}",
-                f"{h ['alpha_acid']:.3f}",
-            ])
-        print(tabulate(rows, headers=["Hop","Weight (g)","Boil time (min)","Alpha acid"], tablefmt="github"))
-    else:
-        for h in hops_additions:
-            print(f"  {h['name']}: {h['weight']:.1f} g (boil_time={h.get('boil_time_min','')} min, alpha_acid={h.get('alpha_acid',0):.3f})")
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+
+console = Console()
+
+def print_recipe(recipe, malt_bill, fermentor_fermentables, hop_additions, gravities, volumes, system):
+    # Titelpanel
+    console.print(Panel(
+        f'{recipe["name"]}, {recipe["target_og_plato"]} L, {recipe["target_og_plato"]} °P, rev: {recipe["version"]}',
+        style="bold cyan",
+        expand=False
+    ))
+
+
+    # Malt-tabell
+    vol= Table(title="Volumes", show_lines=True)
+    vol.add_column("Phase", style="bold")
+    vol.add_column("Volume", justify="right")
+    vol.add_column("Plato", justify="right")
+    vol.add_row("Mash-in", f"{(volumes.pre_boil + volumes.mash_loss):.2f} L, {system.get_volume_in_mm(volumes.pre_boil + volumes.mash_loss):.2f} mm", f"0 °P")
+    vol.add_row("Pre-boil", f"{volumes.pre_boil:.2f} L, {system.get_volume_in_mm(volumes.pre_boil):.2f} mm", f"{gravities.pre_boil:.2f} °P")
+    vol.add_row("Post-boil", f"{volumes.post_boil:.2f} L (trub {volumes.trub_loss:.2f} L), {system.get_volume_in_mm(volumes.post_boil):.2f} mm", f"{gravities.post_boil:.2f} °P")
+
+    console.print(vol)
+
+    # Malt-tabell
+    malt = Table(title="Mash fermentables", show_lines=True)
+    malt.add_column("Namn", style="bold")
+    malt.add_column("Amount [kg]", justify="right")
+
+    for f in malt_bill:
+        malt.add_row(
+            f["name"],
+            f"{f['amount_kg']:.2f} kg"
+        )
+
+    console.print(malt)
+
+    # Humle-tabell
+    hops = Table(title="Hops", show_lines=True)
+    hops.add_column("Name")
+    hops.add_column("Amount [g]", justify="right")
+    hops.add_column("Time [min]", justify="right")
+
+    for h in hop_additions:
+        hops.add_row(
+            h["name"],
+            f'{h["weight"]:.1f}',
+            f"{h['boil_time_min']} min"
+        )
+
+    console.print(hops)
+
+    f_m = Table(title="Fermentor fermentables", show_lines=True)
+    f_m.add_column("Namn", style="bold")
+    f_m.add_column("Amount [kg]", justify="right")
+
+    for f in fermentor_fermentables:
+        f_m.add_row(
+            f["name"],
+            f"{f['amount_kg']:.2f} kg"
+        )
+    console.print(f_m)
+
+
+
 
 
 if __name__ == "__main__":
@@ -77,37 +132,51 @@ if __name__ == "__main__":
     system = getattr(sp, args.system)()
     logger.info("Using system profile: %s", args.system)
 
-    boil_off_volume_l = (recipe.data.get("boil_time_min") / PhysicalConstants().minutes_per_h) * system.boil_off_l_per_hour
-    total_postboil_volume_l = recipe.data["batch_size_l"] + system.trub_loss_l
-
-    total_preboil_volume_l = total_postboil_volume_l + boil_off_volume_l
-    logger.info(f"Volume preboil initially: {total_preboil_volume_l:.2f} L")
-    preboil_gravity_plato = (total_postboil_volume_l/total_preboil_volume_l) * recipe.data["target_og_plato"]
-    logger.info(f"Estimated pre-boil gravity: {preboil_gravity_plato:.2f} °P")
-
-
+    volumes = Volumes(trub_loss=system.trub_loss_l, post_boil=recipe.data["batch_size_l"])
+    logger.info(f"Volume preboil initially: {volumes.post_boil:.2f} L")
+    
     gravity_calc = GravityCalculator(system)
-    grain_bill = gravity_calc.calc_grain_bill_no_sparge(
-        target_plato=preboil_gravity_plato,
-        batch_size_l=total_preboil_volume_l,
-        malts_percent=recipe.data["mash_fermentables"],
-    )
-    total_grain_kg = gravity_calc.calc_total_grain_kg(grain_bill)
+    gravities = Gravities(gravity_calc.get_pre_boil_plato(recipe.data["mash_fermentables"], recipe.data["target_og_plato"]))
 
-    volume_mash_loss_l = gravity_calc.get_volume_loss_from_grain(total_grain_kg)
-    logger.info(f"Volume loss from grain: {volume_mash_loss_l:.2f} L")
-    total_preboil_volume_l = total_preboil_volume_l + volume_mash_loss_l
+    volumes.boil_off = (recipe.data.get("boil_time_min") / PhysicalConstants().minutes_per_h) * system.boil_off_l_per_hour
+    volumes.post_boil = recipe.data["batch_size_l"] + system.trub_loss_l
+    logger.info(f"Volume post-boil: {volumes.post_boil:.2f} L, including trub loss {system.trub_loss_l:.2f} L")
 
-    logger.info(f"Volume preboil, final: {total_preboil_volume_l:.2f} L")
+    volumes.pre_boil = volumes.post_boil + volumes.boil_off
+    logger.info(f"Volume preboil before mash compenation: {volumes.pre_boil:.2f} L, including boil off {volumes.boil_off:.2f} L")
+    gravities.pre_boil = (volumes.post_boil/volumes.pre_boil) * gravities.post_boil
+    logger.info(f"Estimated pre-boil gravity: {gravities.pre_boil:.2f} °P based on post-boil gravity {gravities.post_boil:.2f} °P and volumes reduction {(volumes.post_boil/volumes.pre_boil):.2f}")
+    volumes.mash_loss = 0
+    
+    max_iter = 5
+    gravity_calc = GravityCalculator(system)
+    grain_bill = []
+    grain_bill_change = 1000.0
+    total_grain_kg = 0.0
+    while grain_bill_change > 0.1 :
+        grain_bill = gravity_calc.calc_grain_bill(
+            target_plato=gravities.pre_boil,
+            batch_size_l=volumes.get_total_pre_boil(),
+            malts_percent=recipe.data["mash_fermentables"],
+        )
+        new_total_grain_kg = gravity_calc.calc_total_grain_kg(grain_bill)
+        grain_bill_change = abs(total_grain_kg - new_total_grain_kg)
+        total_grain_kg = new_total_grain_kg
+        volumes.mash_loss = gravity_calc.get_volume_loss_from_grain(total_grain_kg)
+        logger.info(f"Volume loss from grain: {volumes.mash_loss:.2f} L, total grain bill: {total_grain_kg:.2f} kg")
 
+
+
+    logger.info(f"Volume preboil, final: { volumes.get_total_pre_boil():.2f} L")
     # Log results
     logger = logging.getLogger(__name__)
     logger.info("=== Final mash grain bill ===")
-    logger.info(f"Mash-in volume needed: {total_preboil_volume_l:.1f} L, {system.get_volume_in_mm(total_preboil_volume_l):.1f} mm from bottom")
+    logger.info(f"Mash-in volume needed: { volumes.get_total_pre_boil():.1f} L, {system.get_volume_in_mm( volumes.get_total_pre_boil()):.1f} mm from bottom")
     logger.info("Malts:")
     for item in grain_bill:
         logger.info(f"  {item['name']}: {item['amount_kg']:.1f} kg")
     logger.info(f"Total grain: {total_grain_kg:.1f} kg")
+
 
     system = getattr(sp, args.system)()
 
@@ -139,7 +208,7 @@ if __name__ == "__main__":
     logger.info(f"Total fermentor grain: {total_fermentor_kg:.2f} kg")
 
 
-
+    hops_additions = []
     # Om hop_boil_calc anges, kör kalkyl och avsluta
     if args.hop_boil_calc:
         # Validera att båda obligatoriska argumenten finns
@@ -155,16 +224,13 @@ if __name__ == "__main__":
             target_ibu=recipe.data.get("target_ibu", 0),
             hops=recipe.data.get("boil_hops", []),
         )
-        print("=== Hops Additions ===")
-        print_hops_table(hops_additions)
-        sys.exit(0)
     else:
         bitterness_calc = BitternessCalculator()
         hops_additions = bitterness_calc.calc_hops_additions(
-            plato=(preboil_gravity_plato + recipe.data["target_og_plato"]) / 2,
-            volume=total_postboil_volume_l,
+            plato=(gravities.pre_boil + gravities.post_boil) / 2,
+            volume=volumes.pre_boil,
             target_ibu=recipe.data["target_ibu"],
             hops=recipe.data["boil_hops"],
         )
-        print("=== Hops Additions ===")
-        print_hops_table(hops_additions)
+
+    print_recipe(recipe.summary(), grain_bill, grain_bill_fermentor, hops_additions, gravities, volumes, system)

@@ -75,6 +75,10 @@ class RecipeLoader:
         return self.data.get("name", "Okänt recept")
 
     @property
+    def version(self) -> str:
+        return self.data.get("version", "Okänt recept")
+
+    @property
     def batch_size_l(self) -> float:
         return float(self.data["batch_size_l"])
 
@@ -113,6 +117,7 @@ class RecipeLoader:
     def summary(self) -> Dict[str, Any]:
         return {
             "name": self.name,
+            "version": self.version,
             "batch_size_l": self.batch_size_l,
             "boil_time_min": self.boil_time_min,
             "target_og_plato": self.target_og_plato,
