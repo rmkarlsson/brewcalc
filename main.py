@@ -26,10 +26,10 @@ from rich.panel import Panel
 
 console = Console()
 
-def print_recipe(recipe, malt_bill, fermentor_fermentables, hop_additions, gravities, volumes, system):
+def print_recipe(recipe, malt_bill, fermentor_fermentables, hop_additions, gravities, volumes, system, color: float):
     # Titelpanel
     console.print(Panel(
-        f'{recipe["name"]}, {recipe["target_og_plato"]} L, {recipe["target_og_plato"]} °P, rev: {recipe["version"]}',
+        f'{recipe["name"]}, {recipe["batch_size_l"]} L, {recipe["target_og_plato"]} °P, rev: {recipe["version"]}',
         style="bold cyan",
         expand=False
     ))
@@ -40,9 +40,9 @@ def print_recipe(recipe, malt_bill, fermentor_fermentables, hop_additions, gravi
     vol.add_column("Phase", style="bold")
     vol.add_column("Volume", justify="right")
     vol.add_column("Plato", justify="right")
-    vol.add_row("Mash-in", f"{(volumes.pre_boil + volumes.mash_loss):.2f} L, {system.get_volume_in_mm(volumes.pre_boil + volumes.mash_loss):.2f} mm", f"0 °P")
-    vol.add_row("Pre-boil", f"{volumes.pre_boil:.2f} L, {system.get_volume_in_mm(volumes.pre_boil):.2f} mm", f"{gravities.pre_boil:.2f} °P")
-    vol.add_row("Post-boil", f"{volumes.post_boil:.2f} L (trub {volumes.trub_loss:.2f} L), {system.get_volume_in_mm(volumes.post_boil):.2f} mm", f"{gravities.post_boil:.2f} °P")
+    vol.add_row("Mash-in", f"{(volumes.pre_boil + volumes.mash_loss):.1f} L, {system.get_volume_in_mm(volumes.pre_boil + volumes.mash_loss):.1f} mm", f"0 °P")
+    vol.add_row("Pre-boil", f"{volumes.pre_boil:.1f} L, {system.get_volume_in_mm(volumes.pre_boil):.1f} mm", f"{gravities.pre_boil:.1f} °P")
+    vol.add_row("Post-boil", f"{volumes.post_boil:.1f} L (incl. trub {volumes.trub_loss:.1f} L), {system.get_volume_in_mm(volumes.post_boil):.1f} mm", f"{gravities.post_boil:.1f} °P")
 
     console.print(vol)
 
@@ -54,7 +54,7 @@ def print_recipe(recipe, malt_bill, fermentor_fermentables, hop_additions, gravi
     for f in malt_bill:
         malt.add_row(
             f["name"],
-            f"{f['amount_kg']:.2f} kg"
+            f"{f['amount_kg']:.1f} kg"
         )
 
     console.print(malt)
@@ -81,11 +81,14 @@ def print_recipe(recipe, malt_bill, fermentor_fermentables, hop_additions, gravi
     for f in fermentor_fermentables:
         f_m.add_row(
             f["name"],
-            f"{f['amount_kg']:.2f} kg"
+            f"{f['amount_kg']:.1f} kg"
         )
     console.print(f_m)
 
-
+    console.print(Panel(
+        f'Estimated color(Morey): {color:.1f} ECB - {ColorCalculator.get_string(color)}',
+        expand=False
+    ))
 
 
 
@@ -114,10 +117,15 @@ if __name__ == "__main__":
     # Determine log level: CLI arg overrides env var
     log_level = args.debug_level
     effective_level = log_level or "INFO"
-    logging.basicConfig(
-        level=getattr(logging, effective_level, logging.INFO),
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
+
+    file_handler = logging.FileHandler("brewcalc.log")
+    file_handler.setLevel(getattr(logging, effective_level, logging.INFO))
+    file_handler.setFormatter(logging.Formatter(
+        "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    ))
+
+    logging.getLogger().addHandler(file_handler)
+
     logging.getLogger(__name__).info("Starting brecalc (log_level=%s)", effective_level)
     # module logger for later debug output
     logger = logging.getLogger(__name__)
@@ -133,19 +141,19 @@ if __name__ == "__main__":
     logger.info("Using system profile: %s", args.system)
 
     volumes = Volumes(trub_loss=system.trub_loss_l, post_boil=recipe.data["batch_size_l"])
-    logger.info(f"Volume preboil initially: {volumes.post_boil:.2f} L")
+    logger.info(f"Volume preboil initially: {volumes.post_boil:.1f} L")
     
     gravity_calc = GravityCalculator(system)
     gravities = Gravities(gravity_calc.get_pre_boil_plato(recipe.data["mash_fermentables"], recipe.data["target_og_plato"]))
 
     volumes.boil_off = (recipe.data.get("boil_time_min") / PhysicalConstants().minutes_per_h) * system.boil_off_l_per_hour
     volumes.post_boil = recipe.data["batch_size_l"] + system.trub_loss_l
-    logger.info(f"Volume post-boil: {volumes.post_boil:.2f} L, including trub loss {system.trub_loss_l:.2f} L")
+    logger.info(f"Volume post-boil: {volumes.post_boil:.1f} L, including trub loss {system.trub_loss_l:.1f} L")
 
     volumes.pre_boil = volumes.post_boil + volumes.boil_off
-    logger.info(f"Volume preboil before mash compenation: {volumes.pre_boil:.2f} L, including boil off {volumes.boil_off:.2f} L")
+    logger.info(f"Volume preboil before mash compenation: {volumes.pre_boil:.1f} L, including boil off {volumes.boil_off:.1f} L")
     gravities.pre_boil = (volumes.post_boil/volumes.pre_boil) * gravities.post_boil
-    logger.info(f"Estimated pre-boil gravity: {gravities.pre_boil:.2f} °P based on post-boil gravity {gravities.post_boil:.2f} °P and volumes reduction {(volumes.post_boil/volumes.pre_boil):.2f}")
+    logger.info(f"Estimated pre-boil gravity: {gravities.pre_boil:.1f} °P based on post-boil gravity {gravities.post_boil:.1f} °P and volumes reduction {(volumes.post_boil/volumes.pre_boil):.1f}")
     volumes.mash_loss = 0
     
     max_iter = 5
@@ -163,11 +171,11 @@ if __name__ == "__main__":
         grain_bill_change = abs(total_grain_kg - new_total_grain_kg)
         total_grain_kg = new_total_grain_kg
         volumes.mash_loss = gravity_calc.get_volume_loss_from_grain(total_grain_kg)
-        logger.info(f"Volume loss from grain: {volumes.mash_loss:.2f} L, total grain bill: {total_grain_kg:.2f} kg")
+        logger.info(f"Volume loss from grain: {volumes.mash_loss:.1f} L, total grain bill: {total_grain_kg:.1f} kg")
 
 
 
-    logger.info(f"Volume preboil, final: { volumes.get_total_pre_boil():.2f} L")
+    logger.info(f"Volume preboil, final: { volumes.get_total_pre_boil():.1f} L")
     # Log results
     logger = logging.getLogger(__name__)
     logger.info("=== Final mash grain bill ===")
@@ -189,8 +197,7 @@ if __name__ == "__main__":
         volume_l=recipe.batch_size_l
     )
 
-    print("MCU:", color["mcu"])
-    print("EBC (Morey):", color["ebc"])
+    logger.info("EBC (Morey):", color["ebc"])
 
 
     logger.debug("Calulating fermetor fermentables:")
@@ -204,8 +211,8 @@ if __name__ == "__main__":
     logger.info("Fermentor fermentables:")
     total_fermentor_kg = gravity_calc.calc_total_grain_kg(grain_bill_fermentor)
     for item in grain_bill_fermentor:
-        logger.info(f"  {item['name']}: {item['amount_kg']:.2f} kg")
-    logger.info(f"Total fermentor grain: {total_fermentor_kg:.2f} kg")
+        logger.info(f"  {item['name']}: {item['amount_kg']:.1f} kg")
+    logger.info(f"Total fermentor grain: {total_fermentor_kg:.1f} kg")
 
 
     hops_additions = []
@@ -233,4 +240,4 @@ if __name__ == "__main__":
             hops=recipe.data["boil_hops"],
         )
 
-    print_recipe(recipe.summary(), grain_bill, grain_bill_fermentor, hops_additions, gravities, volumes, system)
+    print_recipe(recipe.summary(), grain_bill, grain_bill_fermentor, hops_additions, gravities, volumes, system, color["ebc"])

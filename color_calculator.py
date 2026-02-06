@@ -1,4 +1,5 @@
 import math
+import string
 from typing import List, Dict
 
 
@@ -9,6 +10,20 @@ class ColorCalculator:
     - lista av mash_fermentables med 'amount_kg' och 'color_ebc'
     - batchvolym i liter
     """
+    @staticmethod
+    def get_string(color: float) -> string:
+        if color <= 5:
+            return "Ljust/Gult"
+        if color <= 10:
+            return "Guld/Bärnsten"
+        if color <= 20:
+            return "Bärnsten/Koppar"
+        if color <= 40:
+            return "Koppar/Ljusbrunt"
+        if color <= 80:
+            return "Mörkbrunt"
+        else:
+            return "Svart"
 
     @staticmethod
     def calc_mcu(malts: List[Dict], volume_l: float) -> float:
@@ -21,7 +36,7 @@ class ColorCalculator:
             color = m["color_ebc"]
             total_mcu += kg * color
 
-        return total_mcu / volume_l
+        return (total_mcu / volume_l)
 
     @staticmethod
     def calc_ebc_morey(malts: List[Dict], volume_l: float) -> float:
@@ -31,7 +46,7 @@ class ColorCalculator:
         mcu = ColorCalculator.calc_mcu(malts, volume_l)
         if mcu <= 0:
             return 0.0
-        return 2.9396 * (mcu ** 0.6859)
+        return 7.88 * (mcu ** 0.6859)
 
     @staticmethod
     def calculate(malts: List[Dict], volume_l: float) -> Dict[str, float]:
