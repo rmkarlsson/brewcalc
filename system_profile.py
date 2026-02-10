@@ -13,6 +13,7 @@ class Braumeister20:
     trub_loss_l: float = 1.2              # kon + humle + dödutrymme
     mash_efficiency: float = 0.8
     boiler_diameter_mm: float = 348          # diameter på kokkärl
+    system_weight_kg: float = 15.0                # vikt på systemet (kg), används för att beräkna energibehov
 
     def get_volume_in_mm(self, volume_l: float) -> float:
         """
@@ -61,4 +62,5 @@ class PhysicalConstants:
     # Modulkonstant: volym (L) absorberad per kg malt
     grain_obsortion_l_kg: float = 0.8
     minutes_per_h: float = 60.0
+
 

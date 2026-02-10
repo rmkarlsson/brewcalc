@@ -95,19 +95,19 @@ class RecipeLoader:
         return float(self.data.get("target_ibu", 0))
 
     @property
-    def mash_fermentables(self) -> List[Dict[str, Any]]:
+    def mash_fermentables(self) -> list[Dict[str, Any]]:
         return self.data.get("mash_fermentables", [])
 
     @property
-    def fermentor_fermentables(self) -> List[Dict[str, Any]]:
+    def fermentor_fermentables(self) -> list[Dict[str, Any]]:
         return self.data.get("fermentor_fermentables", [])
 
     @property
-    def boil_hops(self) -> List[Dict[str, Any]]:
+    def boil_hops(self) -> list[Dict[str, Any]]:
         return self.data.get("boil_hops", [])
 
     @property
-    def dry_hops(self) -> List[Dict[str, Any]]:
+    def dry_hops(self) -> list[Dict[str, Any]]:
         return self.data.get("dry_hops", [])
 
     # ---------------------------------------------------------

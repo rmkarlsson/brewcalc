@@ -16,6 +16,9 @@ class Volumes:
     def __init__(self, trub_loss: float, post_boil: float):
         self.trub_loss = trub_loss
         self.post_boil = post_boil
+        self.pre_boil = 0.0
+        self.mash_loss = 0.0
+        self.boil_off = 0.0
 
     def get_total_pre_boil(self) -> float:
         """

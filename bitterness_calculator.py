@@ -15,7 +15,7 @@ class BitternessCalculator:
     def __init__(self):
         pass
 
-    def calc_hops_additions(self, plato: float, volume: float, target_ibu: float, hops: List[Dict]) -> List[Dict]:
+    def calc_hops_additions(self, plato: float, volume: float, target_ibu: float, hops: list[Dict]) -> list[Dict]:
         # Calculate hop additions based on malt percentages and volume
 
         hops_additions = []

@@ -1,6 +1,7 @@
 import math
 import string
 from typing import List, Dict
+from malt import Malt
 
 
 class ColorCalculator:
@@ -26,20 +27,20 @@ class ColorCalculator:
             return "Svart"
 
     @staticmethod
-    def calc_mcu(malts: List[Dict], volume_l: float) -> float:
+    def calc_mcu(malts: list[Malt], volume_l: float) -> float:
         """
         MCU = (sum(malt_kg * malt_color_EBC)) / volume_l
         """
         total_mcu = 0.0
         for m in malts:
-            kg = m["amount_kg"]
-            color = m["color_ebc"]
+            kg = m.amount_kg
+            color = m.color_ecb
             total_mcu += kg * color
 
         return (total_mcu / volume_l)
 
     @staticmethod
-    def calc_ebc_morey(malts: List[Dict], volume_l: float) -> float:
+    def calc_ebc_morey(malts: list[Malt], volume_l: float) -> float:
         """
         Morey EBC = 2.9396 * MCU^0.6859
         """
@@ -49,7 +50,7 @@ class ColorCalculator:
         return 7.88 * (mcu ** 0.6859)
 
     @staticmethod
-    def calculate(malts: List[Dict], volume_l: float) -> Dict[str, float]:
+    def calculate(malts: list[Malt], volume_l: float) -> Dict[str, float]:
         """
         Returnerar både MCU och EBC i ett paket.
         """
