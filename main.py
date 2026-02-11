@@ -2,7 +2,7 @@ import os
 import logging
 import argparse
 import sys
-from turbid_mash import TurbidMashCalculator
+from turbid_mash import TurbidMashCalculator, TurbidMashStep
 from malt import Malt
 from gravities import Gravities
 from volumes import Volumes
@@ -28,17 +28,21 @@ from rich.panel import Panel
 
 console = Console()
 
-def print_recipe(recipe, malt_bill: list[Malt], fermentor_fermentables: list[Malt], hop_additions, gravities, volumes: Volumes, system, color: float):
+
+def print_recipe(recipe, color: float):
     # Titelpanel
     console.print(Panel(
         f'{recipe["name"]}, {recipe["batch_size_l"]} L, {recipe["target_og_plato"]} °P, rev: {recipe["version"]}',
         style="bold cyan",
         expand=False
     ))
+    console.print(Panel(
+        f'Estimated color(Morey): {color:.1f} ECB - {ColorCalculator.get_string(color)}',
+        expand=False
+    ))
 
-
-    # Malt-tabell
-    vol= Table(title="Volumes", show_lines=True)
+def print_volumes_gravities(volumes: Volumes, gravities: Gravities, system):
+    vol = Table(title="Volumes", show_lines=True)
     vol.add_column("Phase", style="bold")
     vol.add_column("Volume", justify="right")
     vol.add_column("Plato", justify="right")
@@ -48,20 +52,9 @@ def print_recipe(recipe, malt_bill: list[Malt], fermentor_fermentables: list[Mal
 
     console.print(vol)
 
-    # Malt-tabell
-    malt = Table(title="Mash fermentables", show_lines=True)
-    malt.add_column("Namn", style="bold")
-    malt.add_column("Amount [kg]", justify="right")
+def print_boil_hops(hop_additions):
 
-    for f in malt_bill:
-        malt.add_row(
-            f'{f.name}',
-            f'{f.amount_kg:.1f} kg'
-        )
-
-    console.print(malt)
-
-    # Humle-tabell
+        # Humle-tabell
     hops = Table(title="Hops", show_lines=True)
     hops.add_column("Name")
     hops.add_column("Amount [g]", justify="right")
@@ -76,21 +69,48 @@ def print_recipe(recipe, malt_bill: list[Malt], fermentor_fermentables: list[Mal
 
     console.print(hops)
 
-    f_m = Table(title="Fermentor fermentables", show_lines=True)
-    f_m.add_column("Namn", style="bold")
-    f_m.add_column("Amount [kg]", justify="right")
+def print_grain_bill(malt_bill: list[Malt], title: str):
 
-    for f in fermentor_fermentables:
-        f_m.add_row(
+    # Malt-tabell
+    malt = Table(title=title, show_lines=True)
+    malt.add_column("Namn", style="bold")
+    malt.add_column("Amount [kg]", justify="right")
+
+    for f in malt_bill:
+        malt.add_row(
             f'{f.name}',
             f'{f.amount_kg:.1f} kg'
         )
-    console.print(f_m)
 
-    console.print(Panel(
-        f'Estimated color(Morey): {color:.1f} ECB - {ColorCalculator.get_string(color)}',
-        expand=False
-    ))
+    console.print(malt)
+
+def print_turbid_mash_schedule(turbid_mash_schedule: list[TurbidMashStep]):
+
+    # Malt-tabell
+    malt = Table(title="Turbid Mash Schedule", show_lines=True)
+    malt.add_column("Target temperature C", style="bold")
+    malt.add_column("Added water temperature C", style="bold")   
+    malt.add_column("Volume to add", justify="right")
+    malt.add_column("Mash time", justify="right")
+
+
+    for f in turbid_mash_schedule:
+        if f.water_l > 0:
+            water_temp_c_str = f'{f.water_temp_c:.1f} °C'
+            target_temp_c_str = f'{f.target_temp_c:.1f} °C'
+            time_min_str = f'{f.time_min:.1f} min'
+        else:
+            water_temp_c_str = 'N/A'
+            target_temp_c_str = 'N/A'
+            time_min_str = 'N/A'
+
+        malt.add_row(
+            target_temp_c_str,
+            water_temp_c_str,
+            f'{f.water_l:.1f} L',
+            time_min_str,
+        )
+    console.print(malt)
 
 
 
@@ -208,13 +228,22 @@ if __name__ == "__main__":
 
     logger.info("EBC (Morey):", color["ebc"])
 
+    print_recipe(recipe.data, color["ebc"])
+    print_volumes_gravities(volumes, gravities, system)
+    print_grain_bill(mash_grain_bill, title="Mash grain bill")
 
-    logger.debug("Calulating fermetor fermentables:")
-    ferm_grain_bill = []
-    for malt_recipe in recipe.data["fermentor_fermentables"]:
-        malt_info_db = get_malt(malt_recipe["name"])
-        malt = Malt(malt_recipe["name"], malt_info_db["extract_percent"], malt_recipe["percent"] / 100.0, malt_info_db["color_ebc"])
+
+    if not recipe.data["fermentor_fermentables"]:
+        logger.debug("No fermentor fermentables defined")
+        ferm_grain_bill = []
+    else:
+        logger.debug("Calulating fermetor fermentables:")
+        ferm_grain_bill = []
+        for malt_recipe in recipe.data["fermentor_fermentables"]:
+            malt_info_db = get_malt(malt_recipe["name"])
+            malt = Malt(malt_recipe["name"], malt_info_db["extract_percent"], malt_recipe["percent"] / 100.0, malt_info_db["color_ebc"])
         ferm_grain_bill.append(malt)
+        print_grain_bill(ferm_grain_bill, title="Fermentor grain bill")
 
     gravity_calc.calc_grain_bill(
         target_plato=recipe.data["target_og_plato"],
@@ -261,10 +290,12 @@ if __name__ == "__main__":
             hops=recipe.data["boil_hops"],
         )
 
+    print_boil_hops(hops_additions)
 
-    print_recipe(recipe.summary(), mash_grain_bill, ferm_grain_bill, hops_additions, gravities, volumes, system, color["ebc"])
     if args.turbid_mash:  
-        TurbidMashCalculator(system).calculate(
+        turbid_steps = TurbidMashCalculator(system).calculate(
             total_grain_kg=total_grain_kg,
             mash_in_l=volumes.get_total_pre_boil(),
             ambient_temp_c=8.0) 
+
+        print_turbid_mash_schedule(turbid_steps)

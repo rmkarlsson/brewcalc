@@ -43,7 +43,10 @@ class RecipeLoader:
         ferm = self.data.get("fermentor_fermentables", [])
 
         mash_sum = sum(m.get("percent", 0) for m in mash)
-        ferm_sum = sum(f.get("percent", 0) for f in ferm)
+        if not ferm:
+            ferm_sum = 0
+        else:
+            ferm_sum = sum(f.get("percent", 0) for f in ferm)
 
         total = mash_sum + ferm_sum
         logger.debug("mash_fermentables sum: %.2f, fermentor_fermentables sum: %.2f", mash_sum, ferm_sum)

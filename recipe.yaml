@@ -1,37 +1,20 @@
 name: Black IPA
 version: 1.0
 batch_size_l: 10.0
-boil_time_min: 60
-target_og_plato: 16.5
-target_ibu: 45.0
+boil_time_min: 120
+target_og_plato: 12
+target_ibu: 5.0
 
 mash_fermentables:
   - name: Best a-xl
-    percent: 85
-  - name: Caramunich 3
-    percent: 5
-  - name: Carafa special 2
-    percent: 5
+    percent: 40
+  - name: Unmalted wheat
+    percent: 60
 fermentor_fermentables:
-  - name: Socker
-    percent: 5
-    extract_percent: 1.00
-  - name: Honung
-    percent: 0
-    extract_percent: 0.95
 
 boil_hops:
   - name: Magnum
     percent: 100
     boil_time_min: 60
-  - name: Cascade
-    percent: 0
-    boil_time_min: 5
 
 dry_hops:
-  - name: Citra
-    amount_g_per_l: 4.0
-    contact_time_days: 3
-  - name: Mosaic
-    amount_g_per_l: 2.5
-    contact_time_days: 3

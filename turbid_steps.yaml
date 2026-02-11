@@ -1,16 +1,30 @@
 steps:
-  - temp_c: 45
-    time_min: 10
-    percent_water: 20
-  - temp_c: 53
-    time_min: 10
-    percent_water: 20
-  - temp_c: 65
-    time_min: 10
-    percent_water: -33
-  - temp_c: 70
-    time_min: 10
-    percent_water: 30
-  - temp_c: 78
-    time_min: 10
-    percent_water: 30
+  - target_temp_c: 45.0
+    time_min: 10.0
+    percent_water: 20.0
+  
+  - target_temp_c: 52.0
+    time_min: 10.0
+    percent_water: 20.0
+  
+  - target_temp_c: 52.0
+    time_min: 0.0
+    percent_water: -33.0
+  
+  - target_temp_c: 65.0
+    time_min: 10.0
+    percent_water: 30.0
+  
+  - target_temp_c: 65.0
+    time_min: 0.0
+    percent_water: -50.0
+  
+  - target_temp_c: 72.0
+    time_min: 30.0
+    percent_water: 30.0
+  - target_temp_c: 72.0
+    time_min: 0.0
+    percent_water: -100.0
+  - target_temp_c: 78.0
+    time_min: 20.0
+    percent_water: 100.0
