@@ -25,7 +25,7 @@ MALTS_DB = {
         "color_ebc": 1150
     },
     "Unmalted wheat": {
-        "extract_percent": 0.75,
+        "extract_percent": 0.73,
         "color_ebc": 3
     },    
     "Socker": {

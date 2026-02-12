@@ -1,10 +1,10 @@
 steps:
   - target_temp_c: 45.0
-    time_min: 10.0
+    time_min: 15.0
     percent_water: 20.0
   
   - target_temp_c: 52.0
-    time_min: 10.0
+    time_min: 15.0
     percent_water: 20.0
   
   - target_temp_c: 52.0
@@ -12,7 +12,7 @@ steps:
     percent_water: -33.0
   
   - target_temp_c: 65.0
-    time_min: 10.0
+    time_min: 15.0
     percent_water: 30.0
   
   - target_temp_c: 65.0

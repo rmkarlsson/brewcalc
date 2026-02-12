@@ -32,13 +32,13 @@ console = Console()
 def print_recipe(recipe, color: float):
     # Titelpanel
     console.print(Panel(
-        f'{recipe["name"]}, {recipe["batch_size_l"]} L, {recipe["target_og_plato"]} °P, rev: {recipe["version"]}',
+        f'{recipe["name"]}, {recipe["batch_size_l"]} L, {recipe["target_og_plato"]} °P, Boil time: {recipe["boil_time_min"]} min, rev: {recipe["version"]}',
         style="bold cyan",
         expand=False
     ))
     console.print(Panel(
         f'Estimated color(Morey): {color:.1f} ECB - {ColorCalculator.get_string(color)}',
-        expand=False
+        expand=False,
     ))
 
 def print_volumes_gravities(volumes: Volumes, gravities: Gravities, system):
@@ -55,7 +55,7 @@ def print_volumes_gravities(volumes: Volumes, gravities: Gravities, system):
 def print_boil_hops(hop_additions):
 
         # Humle-tabell
-    hops = Table(title="Hops", show_lines=True)
+    hops = Table(title="Boil hops", show_lines=True)
     hops.add_column("Name")
     hops.add_column("Amount [g]", justify="right")
     hops.add_column("Time [min]", justify="right")
@@ -69,7 +69,7 @@ def print_boil_hops(hop_additions):
 
     console.print(hops)
 
-def print_grain_bill(malt_bill: list[Malt], title: str):
+def print_grain_bill(malt_bill: list[Malt], title: str, num_mashes: int = None):
 
     # Malt-tabell
     malt = Table(title=title, show_lines=True)
@@ -81,8 +81,14 @@ def print_grain_bill(malt_bill: list[Malt], title: str):
             f'{f.name}',
             f'{f.amount_kg:.1f} kg'
         )
-
     console.print(malt)
+
+    if (title == "Mash grain bill"):
+        console.print(Panel(
+            f'Number of mashes: {num_mashes}',
+            expand=False
+        ))
+
 
 def print_turbid_mash_schedule(turbid_mash_schedule: list[TurbidMashStep]):
 
@@ -230,40 +236,15 @@ if __name__ == "__main__":
 
     print_recipe(recipe.data, color["ebc"])
     print_volumes_gravities(volumes, gravities, system)
-    print_grain_bill(mash_grain_bill, title="Mash grain bill")
+    print_grain_bill(mash_grain_bill, title="Mash grain bill", num_mashes=system.get_num_mashes(total_grain_kg))
 
+    if args.turbid_mash:  
+        turbid_steps = TurbidMashCalculator(system).calculate(
+            total_grain_kg=total_grain_kg,
+            mash_in_l=volumes.get_total_pre_boil(),
+            ambient_temp_c=8.0) 
 
-    if not recipe.data["fermentor_fermentables"]:
-        logger.debug("No fermentor fermentables defined")
-        ferm_grain_bill = []
-    else:
-        logger.debug("Calulating fermetor fermentables:")
-        ferm_grain_bill = []
-        for malt_recipe in recipe.data["fermentor_fermentables"]:
-            malt_info_db = get_malt(malt_recipe["name"])
-            malt = Malt(malt_recipe["name"], malt_info_db["extract_percent"], malt_recipe["percent"] / 100.0, malt_info_db["color_ebc"])
-        ferm_grain_bill.append(malt)
-        print_grain_bill(ferm_grain_bill, title="Fermentor grain bill")
-
-    gravity_calc.calc_grain_bill(
-        target_plato=recipe.data["target_og_plato"],
-        batch_size_l=recipe.data["batch_size_l"],
-        grain_bill=ferm_grain_bill,
-    )
-
-    # Skriv ut fermentor-ingredienser och total vikt
-    logger.info("Fermentor fermentables:")
-    total_fermentor_kg = gravity_calc.calc_total_grain_kg(ferm_grain_bill)
-    for item in ferm_grain_bill:
-        logger.info(f"  {item.name}: {item.amount_kg:.1f} kg")
-    logger.info(f"Total fermentor grain: {total_fermentor_kg:.1f} kg")
-
-    for item in mash_grain_bill:
-        logger.info(f"MIKAEL  {item.name}: {item.amount_kg:.1f} kg")
-    logger.info(f"MIKAEL Total mash grain: {total_grain_kg:.1f} kg")
-    for item in ferm_grain_bill:
-        logger.info(f"MIKAEL  {item.name}: {item.amount_kg:.1f} kg")
-    logger.info(f"MIKAEL Total fermentor grain: {total_fermentor_kg:.1f} kg")
+        print_turbid_mash_schedule(turbid_steps)
 
     hops_additions = []
     # Om hop_boil_calc anges, kör kalkyl och avsluta
@@ -292,10 +273,29 @@ if __name__ == "__main__":
 
     print_boil_hops(hops_additions)
 
-    if args.turbid_mash:  
-        turbid_steps = TurbidMashCalculator(system).calculate(
-            total_grain_kg=total_grain_kg,
-            mash_in_l=volumes.get_total_pre_boil(),
-            ambient_temp_c=8.0) 
 
-        print_turbid_mash_schedule(turbid_steps)
+    ferm_grain_bill = []
+    if not recipe.data["fermentor_fermentables"]:
+        logger.debug("No fermentor fermentables defined")
+    else:
+        logger.debug("Calulating fermetor fermentables:")
+        for malt_recipe in recipe.data["fermentor_fermentables"]:
+            malt_info_db = get_malt(malt_recipe["name"])
+            malt = Malt(malt_recipe["name"], malt_info_db["extract_percent"], malt_recipe["percent"] / 100.0, malt_info_db["color_ebc"])
+        ferm_grain_bill.append(malt)
+
+        gravity_calc.calc_grain_bill(
+            target_plato=recipe.data["target_og_plato"],
+            batch_size_l=recipe.data["batch_size_l"],
+            grain_bill=ferm_grain_bill,
+        )
+        print_grain_bill(ferm_grain_bill, title="Fermentor grain bill")
+
+    # Skriv ut fermentor-ingredienser och total vikt
+    logger.info("Fermentor fermentables:")
+    total_fermentor_kg = gravity_calc.calc_total_grain_kg(ferm_grain_bill)
+    for item in ferm_grain_bill:
+        logger.info(f"  {item.name}: {item.amount_kg:.1f} kg")
+    logger.info(f"Total fermentor grain: {total_fermentor_kg:.1f} kg")
+
+
