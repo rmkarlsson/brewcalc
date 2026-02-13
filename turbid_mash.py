@@ -44,7 +44,7 @@ class TurbidMashCalculator:
         for step in self.steps:
             if step.percent_water < 0:
                 # When removing water use current mash vloume and not total mash_in volume
-                water_to_add_l = (step.percent_water / 100.0) * water_to_add_l
+                water_to_add_l = (step.percent_water / 100.0) * total_water_l
                 energy_needed_malt_kj = 0.0
                 temp_diff_c = 0.0
                 water_temp_needed = step.target_temp_c
@@ -58,7 +58,7 @@ class TurbidMashCalculator:
                                                     total_water_l * self.WATER_SPECIFIC_HEAT +
                                                     self.sys.system_weight_kg * self.STAINLESS_HEAT)  
                 water_temp_needed = (energy_needed_malt_kj / (water_to_add_l * self.WATER_SPECIFIC_HEAT)) + inital_temp_c
-                total_water_l = water_to_add_l + total_water_l
+            total_water_l = water_to_add_l + total_water_l
 
                 
             result.append(TurbidMashStep(
