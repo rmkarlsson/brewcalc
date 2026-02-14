@@ -1,5 +1,5 @@
 name: Black IPA
-version: 1.0
+version: 1.1
 batch_size_l: 10.0
 boil_time_min: 120
 target_og_plato: 12
