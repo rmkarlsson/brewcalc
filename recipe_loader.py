@@ -1,5 +1,6 @@
 import yaml
 import logging
+import os
 from typing import Dict, Any, List
 
 # Module logger
@@ -15,7 +16,9 @@ class RecipeLoader:
     """
 
     def __init__(self, path: str):
-        self.path = path
+        self.path = "recipes/" + path
+        if not os.path.exists(self.path):
+            raise FileNotFoundError(f"Receptfil hittades inte: {self.path}")
         self.data = self._load_yaml()
 
         logger.debug("Loaded recipe data from %s", self.path)

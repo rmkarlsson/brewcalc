@@ -162,8 +162,6 @@ if __name__ == "__main__":
 
     # 1. Läs recept
     # Verifiera att receptfilen finns innan vi försöker ladda den
-    if not os.path.exists(args.recipe):
-        parser.error(f"Receptfil hittades inte: {args.recipe}")
     recipe = RecipeLoader(args.recipe)
 
     # 2. Initiera system och kalkylatorer

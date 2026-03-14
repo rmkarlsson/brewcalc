@@ -10,6 +10,12 @@ HOPS_DB = {
     },
     "Magnum": {
         "alpha_acid": 0.10,
+    },
+    "Idaho 7": {
+        "alpha_acid": 0.12,
+    },
+    "Simco": {
+        "alpha_acid": 0.132,
     }
 }
 

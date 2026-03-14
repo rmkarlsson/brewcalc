@@ -1,0 +1,31 @@
+name: Hoppy dark lager
+version: 1.1
+batch_size_l: 10.0
+boil_time_min: 60
+target_og_plato: 12
+target_ibu: 30.0
+
+mash_fermentables:
+  - name: Best a-xl
+    percent: 53
+  - name: Caramunich 3
+    percent: 7
+  - name: Munich II
+    percent: 30
+  - name: Munich I
+    percent: 10
+
+fermentor_fermentables:
+ 
+boil_hops:
+  - name: Magnum
+    percent: 100
+    boil_time_min: 60
+
+dry_hops:
+  - name: Idaho 7
+    amount_g_per_l: 4.0
+    contact_time_days: 3
+  - name: Simco
+    amount_g_per_l: 2.5
+    contact_time_days: 3

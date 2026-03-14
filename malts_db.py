@@ -7,7 +7,6 @@ MALTS_DB = {
         "extract_percent": 0.80,
         "color_ebc": 3
     },
-    
     "Caramunich 3": {
         "extract_percent": 0.73,
         "color_ebc": 150
@@ -16,9 +15,13 @@ MALTS_DB = {
         "extract_percent": 0.72,
         "color_ebc": 4
     },
-    "Munich Malt": {
+    "Munich I": {
         "extract_percent": 0.78,
         "color_ebc": 15
+    },
+    "Munich II": {
+        "extract_percent": 0.78,
+        "color_ebc": 22
     },
     "Carafa special 2": {
         "extract_percent": 0.72,
