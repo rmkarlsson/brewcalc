@@ -9,7 +9,7 @@ HOPS_DB = {
         "alpha_acid": 0.035,
     },
     "Magnum": {
-        "alpha_acid": 0.10,
+        "alpha_acid": 0.17,
     },
     "Idaho 7": {
         "alpha_acid": 0.12,

@@ -27,7 +27,7 @@ class Braumeister20:
         return mm_per_liter * volume_l
 
 
-    def get_volume_l(into_mm: int) -> float:
+    def get_volume_l(self, into_mm: int) -> float:
         """
         Returnerar volym i liter baserat på höjd i mm i kokkärlet.
         """

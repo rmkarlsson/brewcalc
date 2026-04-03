@@ -79,7 +79,7 @@ def print_grain_bill(malt_bill: list[Malt], title: str, num_mashes: int = None):
     for f in malt_bill:
         malt.add_row(
             f'{f.name}',
-            f'{f.amount_kg:.1f} kg'
+            f'{f.amount_kg:.2f} kg'
         )
     console.print(malt)
 

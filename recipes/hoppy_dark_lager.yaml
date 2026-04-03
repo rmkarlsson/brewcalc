@@ -7,13 +7,13 @@ target_ibu: 30.0
 
 mash_fermentables:
   - name: Best a-xl
-    percent: 53
+    percent: 47
   - name: Caramunich 3
     percent: 7
   - name: Munich II
-    percent: 30
+    percent: 23
   - name: Munich I
-    percent: 10
+    percent: 23
 
 fermentor_fermentables:
  
