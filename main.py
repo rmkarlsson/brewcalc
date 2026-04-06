@@ -146,10 +146,10 @@ if __name__ == "__main__":
 
     # Determine log level: CLI arg overrides env var
     log_level = args.debug_level
-    effective_level = log_level or "INFO"
+    effective_level = log_level or "DEBUG"  # Default to DEBUG if not set
 
     file_handler = logging.FileHandler("brewcalc.log")
-    file_handler.setLevel(getattr(logging, effective_level, logging.INFO))
+    file_handler.setLevel(getattr(logging, effective_level, logging.DEBUG))
     file_handler.setFormatter(logging.Formatter(
         "%(asctime)s %(levelname)s %(name)s: %(message)s"
     ))
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     logging.getLogger(__name__).info("Starting brecalc (log_level=%s)", effective_level)
     # module logger for later debug output
     logger = logging.getLogger(__name__)
-
+    logging.getLogger().setLevel(getattr(logging, effective_level, logging.DEBUG))
     # 1. Läs recept
     # Verifiera att receptfilen finns innan vi försöker ladda den
     recipe = RecipeLoader(args.recipe)
@@ -230,7 +230,7 @@ if __name__ == "__main__":
         volume_l=recipe.batch_size_l
     )
 
-    logger.info("EBC (Morey):", color["ebc"])
+    logger.info("EBC (Morey): %s", color["ebc"])
 
     print_recipe(recipe.data, color["ebc"])
     print_volumes_gravities(volumes, gravities, system)

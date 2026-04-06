@@ -101,6 +101,10 @@ class RecipeLoader:
         return float(self.data.get("target_ibu", 0))
 
     @property
+    def mash_ph(self) -> float:
+        return float(self.data.get("mash_ph", 0))
+
+    @property
     def mash_fermentables(self) -> list[Dict[str, Any]]:
         return self.data.get("mash_fermentables", [])
 

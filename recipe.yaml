@@ -4,12 +4,18 @@ batch_size_l: 10.0
 boil_time_min: 120
 target_og_plato: 12
 target_ibu: 5.0
+mash_ph: 5.2
 
 mash_fermentables:
   - name: Best a-xl
     percent: 40
   - name: Unmalted wheat
     percent: 60
+
+fining:
+  - name: gelatin
+    amount_ml: 5
+
 fermentor_fermentables:
 
 boil_hops:

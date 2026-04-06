@@ -1,6 +1,6 @@
 HOPS_DB = {
     "Cascade": {
-        "alpha_acid": 0.055,
+        "alpha_acid": 0.065,
     },
     "Centennial": {
         "alpha_acid": 0.10,
