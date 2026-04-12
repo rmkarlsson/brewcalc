@@ -1,0 +1,20 @@
+name: Lambic
+version: 1.0
+batch_size_l: 10.0
+boil_time_min: 180
+target_og_plato: 12
+target_ibu: 5.0
+
+mash_fermentables:
+  - name: Best a-xl
+    percent: 60
+  - name: Unmalted wheat
+    percent: 40
+fermentor_fermentables:
+
+boil_hops:
+  - name: Saaz, gammal
+    percent: 100
+    boil_time_min: 60
+
+dry_hops:

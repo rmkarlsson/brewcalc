@@ -38,7 +38,7 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
 
     # 2. Initiera system och kalkylatorer
-    system = getattr(sp, args.system)()
+    system = sp.get_system_profile(args.system)
     logger.info("Using system profile: %s", args.system)
 
     if args.l_to_mm is not None:

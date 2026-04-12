@@ -137,7 +137,7 @@ if __name__ == "__main__":
     parser.add_argument("--hop_boil_calc", "-b", action="store_true", help="Aktivera humlekalkyl (kräver --plato/-p och --volume/-v)")
     parser.add_argument("--plato", "-p", type=float, help="Plato (°P) att använda vid humlekalkyl")
     parser.add_argument("--volume", "-v", type=float, help="Volym i liter (L) att använda vid humlekalkyl")
-    parser.add_argument("--system", "-s", choices=["Braumeister20", "Braumeister20Short"], default="Braumeister20Short", help="Systemprofil att använda (Braumeister20 eller Braumeister20Short)")
+    parser.add_argument("--system", "-s", choices=["Braumeister20", "Braumeister20Short", "GrainfatherG30"], default="Braumeister20Short", help="Systemprofil att använda (Braumeister20, Braumeister20Short or GrainfatherG30)")
     parser.add_argument("--recipe", "-r", required=True, help="Sökväg till receptfil (YAML) som ska användas")
     parser.add_argument("--turbid_mash", "-t", action="store_true", help="Sökväg till receptfil (YAML) som ska användas")
 
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     recipe = RecipeLoader(args.recipe)
 
     # 2. Initiera system och kalkylatorer
-    system = getattr(sp, args.system)()
+    system = sp.get_system_profile(args.system)
     logger.info("Using system profile: %s", args.system)
 
     volumes = Volumes(trub_loss=system.trub_loss_l, post_boil=recipe.data["batch_size_l"])
@@ -217,9 +217,6 @@ if __name__ == "__main__":
     for item in mash_grain_bill:
         logger.info(f"  {item.name}: {item.amount_kg:.1f} kg")
     logger.info(f"Total grain: {total_grain_kg:.1f} kg")
-
-
-    system = getattr(sp, args.system)()
 
 #    get_num_mashes = system.get_num_mashes(total_grain_kg)
 #    logger.info(f"Number of mashes required: {get_num_mashes}")

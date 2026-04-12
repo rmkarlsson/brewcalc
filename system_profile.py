@@ -54,6 +54,34 @@ class Braumeister20Short(Braumeister20):
     # Ärver fält och metoder från Braumeister20Short, bara överskriv max_grain_per_mash_kg
     max_grain_per_mash_kg: float = 2.6
 
+
+@dataclass
+class GrainfatherG30(Braumeister20):
+    """
+    Systemprofil för Braumeister 20L med normal (stor) maltpipa.
+    Samma fält som `Braumeister20Short` men med högre `max_grain_per_mash_kg`.
+    """
+    # Ärver fält och metoder från Braumeister20Short, bara överskriv max_grain_per_mash_kg
+    max_grain_per_mash_kg: float = 5.0
+    boil_off_l_per_hour: float = 2.0      # kokförlust per timme
+    trub_loss_l: float = 0.8
+
+
+SYSTEM_PROFILES = {
+    "Braumeister20": Braumeister20,
+    "Braumeister20Short": Braumeister20Short,
+    "GrainfatherG30": GrainfatherG30,
+}
+
+
+def get_system_profile(name: str):
+    """Returnerar en instans av systemprofil baserat på namn."""
+    try:
+        return SYSTEM_PROFILES[name]()
+    except KeyError as exc:
+        raise ValueError(f"Systemprofil '{name}' finns inte") from exc
+
+
 @dataclass
 class PhysicalConstants:
     """
@@ -62,5 +90,8 @@ class PhysicalConstants:
     # Modulkonstant: volym (L) absorberad per kg malt
     grain_obsortion_l_kg: float = 0.8
     minutes_per_h: float = 60.0
+    mash_efficiency: float = 0.72
+    boiler_diameter_mm: float = 386          # diameter på kokkärl
+    system_weight_kg: float = 14.6           # vikt på systemet (kg), används för att beräkna energibehov
 
 
