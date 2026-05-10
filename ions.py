@@ -8,12 +8,12 @@ from recipe import Ion
 '''1 gram per 10 liter ger ett tillskott av 27,8 mg/l Kalcium (Ca2+) och 49,2 mg/l klorid (Cl-).'''
 SALT_DB = {
     "Calcium chloride": {
-        "Calcium": 28,
-        "Chloride": 49
+        "Calcium": 27.8,
+        "Chloride": 49.2
     },
     "Calcium sulfate": {
-        "Calcium": 27,
-        "Sulfate": 67
+        "Calcium": 27.6,
+        "Sulfate": 66.2
     }
 }
 

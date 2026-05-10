@@ -56,6 +56,19 @@ def print_color_for_ebc(ebc_value):
     ebc, (r, g, b), label = get_next_color(ebc_value)
     color_block(r, g, b, label)
 
+def print_salts(salts_to_add):
+    salts_table = Table(title="Salts to add", show_lines=True)
+    salts_table.add_column("Salt name")
+    salts_table.add_column("Amount [g]", justify="right")
+
+    for salt_name, amount_g in salts_to_add:
+        salts_table.add_row(
+            salt_name,
+            f'{amount_g:.1f} g'
+        )
+
+    console.print(salts_table)
+    
 
 def print_recipe(recipe: Recipe, color: float):
     # Titelpanel
@@ -319,9 +332,14 @@ if __name__ == "__main__":
         print_grain_bill(ferm_grain_bill, title="Fermentor grain bill")
 
 
+    salts_to_add = []
     for ion in recipe.ions or []:
         gram_salt = ion_estimator.estimate_salt_amount(ion, volumes.get_total_post_boil(), volumes.mash_loss)
+        salts_to_add.append((ion.salt_name, gram_salt))
         logger.info(f"To reach {ion.amount_mg_per_l} mg/L of {ion.name}, add {gram_salt:.1f} g of {ion.salt_name}") 
+
+    print_salts(salts_to_add)
+
 
     # Skriv ut fermentor-ingredienser och total vikt
     logger.info("Fermentor fermentables:")
