@@ -2,6 +2,7 @@ import os
 import logging
 import argparse
 import sys
+from ions import ion_estimator
 from turbid_mash import TurbidMashCalculator, TurbidMashStep
 from malt import Malt
 from gravities import Gravities
@@ -316,6 +317,11 @@ if __name__ == "__main__":
             grain_bill=ferm_grain_bill,
         )
         print_grain_bill(ferm_grain_bill, title="Fermentor grain bill")
+
+
+    for ion in recipe.ions or []:
+        gram_salt = ion_estimator.estimate_salt_amount(ion, volumes.get_total_post_boil(), volumes.mash_loss)
+        logger.info(f"To reach {ion.amount_mg_per_l} mg/L of {ion.name}, add {gram_salt:.1f} g of {ion.salt_name}") 
 
     # Skriv ut fermentor-ingredienser och total vikt
     logger.info("Fermentor fermentables:")

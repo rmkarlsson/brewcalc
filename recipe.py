@@ -28,7 +28,7 @@ class DryHop(BaseModel):
 class Ion(BaseModel):
     name: str
     salt_name: str
-    amount_ppm: float
+    amount_mg_per_l: float
 
 
 class Recipe(BaseModel):

@@ -35,10 +35,10 @@ dry_hops:
 ions:
   - name: Chloride
     salt_name: Calcium chloride
-    amount_ppm: 50.0
+    amount_mg_per_l: 50.0
   - name: Sulfate
     salt_name: Calcium sulfate
-    amount_ppm: 50.0
+    amount_mg_per_l: 150.0
 
 comments:
   - ""

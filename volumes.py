@@ -25,3 +25,9 @@ class Volumes:
         Total volym som behövs innan kok, inklusive mäskförluster.
         """
         return self.pre_boil + self.mash_loss
+    
+    def get_total_post_boil(self) -> float:
+        """
+        Total volym som behövs efter kok, inklusive trubförluster.
+        """
+        return self.post_boil
