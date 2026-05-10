@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, field_validator
+import yaml
+from pathlib import Path
 
 
 class Fermentable(BaseModel):
@@ -10,44 +12,72 @@ class Fining(BaseModel):
     name: str
     amount_ml: float
 
-class Hop(BaseModel):
+
+class BoilHop(BaseModel):
     name: str
     percent: float
     boil_time_min: float
 
 
-class Recipe(BaseModel):
+class DryHop(BaseModel):
     name: str
+    amount_g_per_l: float
+    contact_time_days: float
+
+
+class Ion(BaseModel):
+    name: str
+    salt_name: str
+    amount_ppm: float
+
+
+class Recipe(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    
+    name: str
+    version: str | float
     batch_size_l: float
-    fermentables: list[dict]
-    fining: list[dict] | None = None
-    fermentor_fermentables: list[dict] | None = None
-    boil_hops: list[dict] | None = None
+    boil_time_min: float
+    target_og_plato: float
+    target_ibu: float
+    mash_fermentables: list[Fermentable]
+    ambient_temperature_c: float = 20.0
+    mash_ph: float | None = None
+    fining: list[Fining] | None = None
+    fermentor_fermentables: list[Fermentable] | None = None
+    boil_hops: list[BoilHop] | None = None
+    dry_hops: list[DryHop] | None = None
+    ions: list[Ion] | None = None
+    comments: list[str] | None = None
 
 
-name: Black IPA
-version: 1.1
-batch_size_l: 10.0
-boil_time_min: 120
-target_og_plato: 12
-target_ibu: 5.0
-mash_ph: 5.2
-
-mash_fermentables:
-  - name: Best a-xl
-    percent: 40
-  - name: Unmalted wheat
-    percent: 60
-
-fining:
-  - name: Irish moss
-    amount_g: 5
-
-fermentor_fermentables:
-
-boil_hops:
-  - name: Magnum
-    percent: 100
-    boil_time_min: 60
-
-dry_hops:
+def load_recipe(yaml_path: str) -> Recipe:
+    """
+    Läser en recept-YAML-fil och skapar ett Recipe-objekt med validering.
+    
+    Args:
+        yaml_path: Sökväg till YAML-fil (relativ eller absolut)
+        
+    Returns:
+        Recipe: Validerat Recipe-objekt
+        
+    Raises:
+        FileNotFoundError: Om filen inte finns
+        ValueError: Om validering misslyckas
+    """
+    path = Path(yaml_path)
+    
+    # Om sökvägen är relativ, antag recipes/-mappen
+    if not path.is_absolute() and not str(path).startswith("recipes/"):
+        path = Path("recipes") / path
+    
+    if not path.exists():
+        raise FileNotFoundError(f"Receptfil hittades inte: {path}")
+    
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    
+    # Skapa och validera Recipe-objekt
+    recipe = Recipe(**data)
+    
+    return recipe

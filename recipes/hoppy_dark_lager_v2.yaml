@@ -1,23 +1,21 @@
 name: Hoppy dark lager
-version: 1.1
-batch_size_l: 10.0
+version: 1.2
+batch_size_l: 9.0
 boil_time_min: 60
-target_og_plato: 12
-target_ibu: 30.0
+target_og_plato: 13
+target_ibu: 20.0
 
 mash_fermentables:
   - name: Best a-xl
-    percent: 47
-  - name: Caramunich 3
-    percent: 7
+    percent: 28
+  - name: Caramunich 2
+    percent: 10
   - name: Munich II
-    percent: 23
+    percent: 30
   - name: Munich I
-    percent: 23
+    percent: 30
   - name: Carafa special 2
     percent: 2
-
-    
 
 fermentor_fermentables:
  
@@ -33,3 +31,14 @@ dry_hops:
   - name: Simco
     amount_g_per_l: 2.5
     contact_time_days: 3
+
+ions:
+  - name: Chloride
+    salt_name: Calcium chloride
+    amount_ppm: 50.0
+  - name: Sulfate
+    salt_name: Calcium sulfate
+    amount_ppm: 50.0
+
+comments:
+  - ""

@@ -11,8 +11,9 @@ HOPS_DB = {
     "Saaz": {
         "alpha_acid": 0.035,
     },
-    "Saaz, gammal": {
-        "alpha_acid": 0.035,
+    "Mandarina bavaria, oxidized": {
+        "alpha_acid": 0.02,
+        "comment": "Oxiderade humlekottar har kraftigt reducerat alfasyra-innehåll"
     },
     "Magnum": {
         "alpha_acid": 0.17,

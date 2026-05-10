@@ -11,6 +11,10 @@ MALTS_DB = {
         "extract_percent": 0.73,
         "color_ebc": 150
     },
+    "Caramunich 2": {
+        "extract_percent": 0.73,
+        "color_ebc": 120
+    },    
     "Carapils": {
         "extract_percent": 0.72,
         "color_ebc": 4

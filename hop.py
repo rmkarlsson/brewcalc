@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import string
 from enum import Enum
 
 
@@ -11,13 +10,14 @@ class HopType(Enum):
 
 @dataclass
 class Hop:
-    name: string
+    name: str
     alpha_acid: float
     hop_type: HopType
     amount_g: float = 0.0 
     effective_steep_time: float = 0.0
+    comment: str = ""
 
-    def __init__(self, name: string, alpha_acid: float, hop_type: HopType):
+    def __init__(self, name: str, alpha_acid: float, hop_type: HopType):
         self.name = name
         self.alpha_acid = alpha_acid
         self.hop_type = hop_type

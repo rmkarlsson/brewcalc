@@ -1,9 +1,10 @@
 name: Lambic
 version: 1.0
 batch_size_l: 10.0
-boil_time_min: 180
+boil_time_min: 120
 target_og_plato: 12
-target_ibu: 5.0
+target_ibu: 7.0
+ambient_temperature_c: 18.0
 
 mash_fermentables:
   - name: Best a-xl
@@ -13,7 +14,7 @@ mash_fermentables:
 fermentor_fermentables:
 
 boil_hops:
-  - name: Saaz, gammal
+  - name: Mandarina bavaria, oxidized
     percent: 100
     boil_time_min: 60
 

@@ -18,8 +18,8 @@ from bitterness_calculator import BitternessCalculator
 from gravity_calculator import GravityCalculator
 import system_profile as sp
 from system_profile import PhysicalConstants
-from recipe_loader import RecipeLoader
 from color_calculator import ColorCalculator
+from recipe import Recipe, load_recipe
 
 
 from rich.console import Console
@@ -28,11 +28,38 @@ from rich.panel import Panel
 
 console = Console()
 
+# Lista med (EBC-värde, RGB, etikett)
+colors = [
+    (4,   (250, 240, 120), "4 EBC   (Strågul)"),
+    (8,   (240, 210, 90),  "8 EBC   (Ljusguld)"),
+    (12,  (235, 190, 70),  "12 EBC  (Guld)"),
+    (18,  (225, 160, 50),  "18 EBC  (Djup guld)"),
+    (28,  (200, 120, 40),  "28 EBC  (Amber)"),
+    (45,  (170, 90, 30),   "45 EBC  (Koppar)"),
+    (60,  (140, 80, 25),   "60 EBC  (Brun)"),
+    (72,  (100, 55, 25),   "72 EBC  (Mörk koppar)"),
+    (85,  (60, 40, 20),    "85 EBC  (Mörkbrun)"),
+    (100, (20, 20, 20),    "100 EBC (Svart)"),
+]
 
-def print_recipe(recipe, color: float):
+def get_next_color(ebc_value):
+    for ebc, rgb, label in colors:
+        if ebc >= ebc_value:
+            return (ebc, rgb, label)
+    return colors[-1]  # om värdet är högre än allt i listan
+
+def color_block(r, g, b, label):
+    print(f"\033[48;2;{r};{g};{b}m  {label:<18}  \033[0m")
+
+def print_color_for_ebc(ebc_value):
+    ebc, (r, g, b), label = get_next_color(ebc_value)
+    color_block(r, g, b, label)
+
+
+def print_recipe(recipe: Recipe, color: float):
     # Titelpanel
     console.print(Panel(
-        f'{recipe["name"]}, {recipe["batch_size_l"]} L, {recipe["target_og_plato"]} °P, Boil time: {recipe["boil_time_min"]} min, rev: {recipe["version"]}',
+        f'{recipe.name}, {recipe.batch_size_l} L, {recipe.target_og_plato} °P, Boil time: {recipe.boil_time_min} min, rev: {recipe.version}',
         style="bold cyan",
         expand=False
     ))
@@ -40,6 +67,7 @@ def print_recipe(recipe, color: float):
         f'Estimated color(Morey): {color:.1f} ECB - {ColorCalculator.get_string(color)}',
         expand=False,
     ))
+    print_color_for_ebc(color)
 
 def print_volumes_gravities(volumes: Volumes, gravities: Gravities, system):
     vol = Table(title="Volumes", show_lines=True)
@@ -120,6 +148,7 @@ def print_turbid_mash_schedule(turbid_mash_schedule: list[TurbidMashStep]):
 
 
 
+
 if __name__ == "__main__":
     # CLI and global logging config
     parser = argparse.ArgumentParser(description="Brecac kalkylator", add_help=False, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -144,6 +173,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+
+
     # Determine log level: CLI arg overrides env var
     log_level = args.debug_level
     effective_level = log_level or "DEBUG"  # Default to DEBUG if not set
@@ -162,20 +193,20 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(getattr(logging, effective_level, logging.DEBUG))
     # 1. Läs recept
     # Verifiera att receptfilen finns innan vi försöker ladda den
-    recipe = RecipeLoader(args.recipe)
+    recipe = load_recipe(args.recipe)
 
     # 2. Initiera system och kalkylatorer
     system = sp.get_system_profile(args.system)
     logger.info("Using system profile: %s", args.system)
 
-    volumes = Volumes(trub_loss=system.trub_loss_l, post_boil=recipe.data["batch_size_l"])
+    volumes = Volumes(trub_loss=system.trub_loss_l, post_boil=recipe.batch_size_l)
     logger.info(f"Volume preboil initially: {volumes.post_boil:.1f} L")
     
     gravity_calc = GravityCalculator(system)
-    gravities = Gravities(gravity_calc.get_pre_boil_plato(recipe.data["mash_fermentables"], recipe.data["target_og_plato"]))
+    gravities = Gravities(gravity_calc.get_pre_boil_plato(recipe.mash_fermentables, recipe.target_og_plato))
 
-    volumes.boil_off = (recipe.data.get("boil_time_min") / PhysicalConstants().minutes_per_h) * system.boil_off_l_per_hour
-    volumes.post_boil = recipe.data["batch_size_l"] + system.trub_loss_l
+    volumes.boil_off = (recipe.boil_time_min / PhysicalConstants().minutes_per_h) * system.boil_off_l_per_hour
+    volumes.post_boil = recipe.batch_size_l + system.trub_loss_l
     logger.info(f"Volume post-boil: {volumes.post_boil:.1f} L, including trub loss {system.trub_loss_l:.1f} L")
 
     volumes.pre_boil = volumes.post_boil + volumes.boil_off
@@ -185,9 +216,9 @@ if __name__ == "__main__":
     volumes.mash_loss = 0
 
     mash_grain_bill = []
-    for malt_recipe in recipe.data["mash_fermentables"]:
-        malt_info_db = get_malt(malt_recipe["name"])
-        malt = Malt(malt_recipe["name"], malt_info_db["extract_percent"], malt_recipe["percent"] / 100.0, malt_info_db["color_ebc"])
+    for malt_recipe in recipe.mash_fermentables:
+        malt_info_db = get_malt(malt_recipe.name)
+        malt = Malt(malt_recipe.name, malt_info_db["extract_percent"], malt_recipe.percent / 100.0, malt_info_db["color_ebc"])
         mash_grain_bill.append(malt)
 
     max_iter = 5
@@ -229,7 +260,7 @@ if __name__ == "__main__":
 
     logger.info("EBC (Morey): %s", color["ebc"])
 
-    print_recipe(recipe.data, color["ebc"])
+    print_recipe(recipe, color["ebc"])
     print_volumes_gravities(volumes, gravities, system)
     print_grain_bill(mash_grain_bill, title="Mash grain bill", num_mashes=system.get_num_mashes(total_grain_kg))
 
@@ -237,7 +268,7 @@ if __name__ == "__main__":
         turbid_steps = TurbidMashCalculator(system).calculate(
             total_grain_kg=total_grain_kg,
             mash_in_l=volumes.get_total_pre_boil(),
-            ambient_temp_c=8.0) 
+            ambient_temp_c=18.0) 
 
         print_turbid_mash_schedule(turbid_steps)
 
@@ -254,34 +285,34 @@ if __name__ == "__main__":
         hops_additions = bitterness_calc.calc_hops_additions(
             plato=plato_arg,
             volume=volume_arg,
-            target_ibu=recipe.data.get("target_ibu", 0),
-            hops=recipe.data.get("boil_hops", []),
+            target_ibu=recipe.target_ibu,
+            hops=recipe.boil_hops,
         )
     else:
         bitterness_calc = BitternessCalculator()
         hops_additions = bitterness_calc.calc_hops_additions(
             plato=(gravities.pre_boil + gravities.post_boil) / 2,
             volume=volumes.pre_boil,
-            target_ibu=recipe.data["target_ibu"],
-            hops=recipe.data["boil_hops"],
+            target_ibu=recipe.target_ibu,
+            hops=recipe.boil_hops,
         )
 
     print_boil_hops(hops_additions)
 
 
     ferm_grain_bill = []
-    if not recipe.data["fermentor_fermentables"]:
+    if not recipe.fermentor_fermentables:
         logger.debug("No fermentor fermentables defined")
     else:
         logger.debug("Calulating fermetor fermentables:")
-        for malt_recipe in recipe.data["fermentor_fermentables"]:
-            malt_info_db = get_malt(malt_recipe["name"])
-            malt = Malt(malt_recipe["name"], malt_info_db["extract_percent"], malt_recipe["percent"] / 100.0, malt_info_db["color_ebc"])
+        for malt_recipe in recipe.fermentor_fermentables:
+            malt_info_db = get_malt(malt_recipe.name)
+            malt = Malt(malt_recipe.name, malt_info_db["extract_percent"], malt_recipe.percent / 100.0, malt_info_db["color_ebc"])
         ferm_grain_bill.append(malt)
 
         gravity_calc.calc_grain_bill(
-            target_plato=recipe.data["target_og_plato"],
-            batch_size_l=recipe.data["batch_size_l"],
+            target_plato=recipe.target_og_plato,
+            batch_size_l=recipe.batch_size_l,
             grain_bill=ferm_grain_bill,
         )
         print_grain_bill(ferm_grain_bill, title="Fermentor grain bill")

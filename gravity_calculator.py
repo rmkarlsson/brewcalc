@@ -1,6 +1,7 @@
 from typing import Dict, List
 import logging
 from malts_db import get_malt
+from recipe import Fermentable
 from system_profile import Braumeister20Short, PhysicalConstants
 import copy
 from malt import Malt
@@ -37,11 +38,11 @@ class GravityCalculator:
         return sum(m.amount_kg for m in grain_bill) 
 
 
-    def get_pre_boil_plato(self, malts: list[Malt], og_plato: float):
+    def get_pre_boil_plato(self, malts: list[Fermentable], og_plato: float):
         percent = 0
         for m in malts:
-            malt_info = get_malt(m["name"])
-            percent = percent + (m["percent"] / 100.0)
+            malt_info = get_malt(m.name)
+            percent = percent + (m.percent / 100.0)
         return percent * og_plato
 
 
