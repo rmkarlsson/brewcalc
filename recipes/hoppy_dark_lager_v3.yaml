@@ -1,5 +1,5 @@
 name: Hoppy dark lager
-version: 1.2
+version: 1.3
 batch_size_l: 9.0
 boil_time_min: 60
 target_og_plato: 13
@@ -7,15 +7,13 @@ target_ibu: 20.0
 
 mash_fermentables:
   - name: Best a-xl
-    percent: 28
+    percent: 80
   - name: Caramunich 2
     percent: 10
   - name: Munich II
-    percent: 30
-  - name: Munich I
-    percent: 30
+    percent: 5
   - name: Carafa special 2
-    percent: 2
+    percent: 5
 
 fermentor_fermentables:
  

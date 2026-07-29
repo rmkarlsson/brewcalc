@@ -1,0 +1,42 @@
+name: Denny Conn imperial porter
+version: 1.1
+batch_size_l: 10.0
+boil_time_min: 90
+target_og_plato: 19.5
+target_ibu: 35
+
+mash_fermentables:
+  - name: Best a-xl
+    percent: 62
+  - name: Brunmalt
+    percent: 9
+  - name: Munich I
+    percent: 14
+  - name: Simpson T50
+    percent: 3
+  - name: Crisp 240
+    percent: 5.5
+  - name: Low color chocolate malt
+    percent: 7
+
+fermentor_fermentables:
+ 
+boil_hops:
+  - name: Magnum
+    percent: 85
+    boil_time_min: 60
+
+  - name: Styrian golding
+    percent: 15
+    boil_time_min: 15
+
+ions:
+  - name: Chloride
+    salt_name: Calcium chloride
+    amount_mg_per_l: 60.0
+  - name: Sulfate
+    salt_name: Calcium sulfate
+    amount_mg_per_l: 50.0
+
+comments:
+  - ""

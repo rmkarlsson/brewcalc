@@ -182,8 +182,7 @@ if __name__ == "__main__":
     parser.add_argument("--volume", "-v", type=float, help="Volym i liter (L) att använda vid humlekalkyl")
     parser.add_argument("--system", "-s", choices=["Braumeister20", "Braumeister20Short", "GrainfatherG30"], default="Braumeister20Short", help="Systemprofil att använda (Braumeister20, Braumeister20Short or GrainfatherG30)")
     parser.add_argument("--recipe", "-r", required=True, help="Sökväg till receptfil (YAML) som ska användas")
-    parser.add_argument("--turbid_mash", "-t", action="store_true", help="Sökväg till receptfil (YAML) som ska användas")
-
+    parser.add_argument("--turbid_mash", "-t", type=int, default=None, help="Gör ett grumligt mäskschema med inital temperatur på malt och utrustning")
 
     args = parser.parse_args()
 
@@ -278,11 +277,13 @@ if __name__ == "__main__":
     print_volumes_gravities(volumes, gravities, system)
     print_grain_bill(mash_grain_bill, title="Mash grain bill", num_mashes=system.get_num_mashes(total_grain_kg))
 
-    if args.turbid_mash:  
+    if args.turbid_mash is not None:
+        ambient_temp_c = args.turbid_mash if args.turbid_mash is not None else 18.0
+        logger.info("Running turbid mash calc: ambient_temp_c=%s", ambient_temp_c)
         turbid_steps = TurbidMashCalculator(system).calculate(
             total_grain_kg=total_grain_kg,
             mash_in_l=volumes.get_total_pre_boil(),
-            ambient_temp_c=18.0) 
+            ambient_temp_c=ambient_temp_c) 
 
         print_turbid_mash_schedule(turbid_steps)
 

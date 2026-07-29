@@ -11,6 +11,14 @@ MALTS_DB = {
         "extract_percent": 0.73,
         "color_ebc": 150
     },
+    "Simpson T50": {
+        "extract_percent": 0.70,
+        "color_ebc": 130
+    },
+    "Crisp 240": {
+        "extract_percent": 0.71,
+        "color_ebc": 240
+    },
     "Caramunich 2": {
         "extract_percent": 0.73,
         "color_ebc": 120
@@ -30,6 +38,14 @@ MALTS_DB = {
     "Carafa special 2": {
         "extract_percent": 0.72,
         "color_ebc": 1150
+    },
+    "Brunmalt": {
+        "extract_percent": 0.69,
+        "color_ebc": 450
+    },
+    "Low color chocolate malt": {
+        "extract_percent": 0.72,
+        "color_ebc": 580
     },
     "Unmalted wheat": {
         "extract_percent": 0.73,

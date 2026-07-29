@@ -23,7 +23,11 @@ HOPS_DB = {
     },
     "Simco": {
         "alpha_acid": 0.132,
+    },
+    "Styrian golding": {
+        "alpha_acid": 0.032,
     }
+
 }
 
 def get_hop(name):

@@ -41,7 +41,6 @@ class Recipe(BaseModel):
     target_og_plato: float
     target_ibu: float
     mash_fermentables: list[Fermentable]
-    ambient_temperature_c: float = 20.0
     mash_ph: float | None = None
     fining: list[Fining] | None = None
     fermentor_fermentables: list[Fermentable] | None = None

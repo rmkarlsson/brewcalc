@@ -65,6 +65,7 @@ class GrainfatherG30(Braumeister20):
     max_grain_per_mash_kg: float = 5.0
     boil_off_l_per_hour: float = 2.0      # kokförlust per timme
     trub_loss_l: float = 0.8
+    mash_efficiency: float = 0.67
 
 
 SYSTEM_PROFILES = {

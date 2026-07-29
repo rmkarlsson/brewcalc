@@ -1,10 +1,9 @@
 name: Lambic
 version: 1.0
 batch_size_l: 10.0
-boil_time_min: 120
-target_og_plato: 12
+boil_time_min: 240
+target_og_plato: 13
 target_ibu: 7.0
-ambient_temperature_c: 18.0
 
 mash_fermentables:
   - name: Best a-xl
@@ -19,3 +18,11 @@ boil_hops:
     boil_time_min: 60
 
 dry_hops:
+
+ions:
+  - name: Chloride
+    salt_name: Calcium chloride
+    amount_mg_per_l: 50.0
+  - name: Sulfate
+    salt_name: Calcium sulfate
+    amount_mg_per_l: 50.0
