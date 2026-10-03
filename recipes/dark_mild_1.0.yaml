@@ -1,0 +1,41 @@
+name: Dark mild
+version: 1.0
+batch_size_l: 10.0
+boil_time_min: 60
+target_og_plato: 10
+target_ibu: 15
+
+mash_fermentables:
+  - name: Best a-xl
+    percent: 68
+  - name: Brunmalt
+    percent: 7
+  - name: Munich II
+    percent: 10
+  - name: Crisp 240
+    percent: 5
+  - name: Low color chocolate malt
+    percent: 2
+  - name: Amber malt
+    percent: 7
+  - name: Carafa special 2
+    percent: 1
+
+fermentor_fermentables:
+ 
+boil_hops:
+  - name: East Kent golding
+    percent: 100
+    boil_time_min: 60
+
+
+ions:
+  - name: Chloride
+    salt_name: Calcium chloride
+    amount_mg_per_l: 80.0
+  - name: Sulfate
+    salt_name: Calcium sulfate
+    amount_mg_per_l: 20.0
+
+comments:
+  - ""

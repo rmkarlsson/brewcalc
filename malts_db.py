@@ -43,6 +43,14 @@ MALTS_DB = {
         "extract_percent": 0.69,
         "color_ebc": 450
     },
+    "Brunmalt Crisp": {
+        "extract_percent": 0.69,
+        "color_ebc": 150
+    },
+    "Amber malt": {
+        "extract_percent": 0.74,
+        "color_ebc": 80
+    },
     "Low color chocolate malt": {
         "extract_percent": 0.72,
         "color_ebc": 580
