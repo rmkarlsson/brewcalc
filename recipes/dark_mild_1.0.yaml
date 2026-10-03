@@ -7,17 +7,17 @@ target_ibu: 15
 
 mash_fermentables:
   - name: Best a-xl
-    percent: 68
+    percent: 70
   - name: Brunmalt
-    percent: 7
+    percent: 5
   - name: Munich II
-    percent: 10
+    percent: 12
   - name: Crisp 240
     percent: 5
   - name: Low color chocolate malt
     percent: 2
   - name: Amber malt
-    percent: 7
+    percent: 5
   - name: Carafa special 2
     percent: 1
 

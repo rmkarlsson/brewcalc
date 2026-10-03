@@ -5,6 +5,9 @@ HOPS_DB = {
     "Centennial": {
         "alpha_acid": 0.10,
     },
+    "East Kent golding": {
+        "alpha_acid": 0.04,
+    },
     "Saaz": {
         "alpha_acid": 0.035,
     },
